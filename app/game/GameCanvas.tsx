@@ -27,6 +27,9 @@ export default function GameCanvas() {
   const prevNpcsRef = useRef<{ x: number; y: number; variant: number }[]>([]);
   const nextNpcsRef = useRef<{ x: number; y: number; variant: number }[]>([]);
   const wanderRef = useRef<{ dx: number; dy: number; phase: number; delay: number }[]>([]);
+  // Offscreen cache for static under-layer. Invalidated when scene changes.
+  const underCacheRef = useRef<HTMLCanvasElement | null>(null);
+  const cachedSceneRef = useRef<unknown>(null);
 
   const W = state.worldModule.width;
   const H = state.worldModule.height;
@@ -109,7 +112,21 @@ export default function GameCanvas() {
 
       // ── World-specific layers ──
       state.worldModule.renderBackground(ctx, state.scene, time);
-      state.worldModule.renderUnder(ctx, state.scene, time);
+      // Under-layer is static — cache to offscreen, blit each frame.
+      if (cachedSceneRef.current !== state.scene || underCacheRef.current === null
+          || underCacheRef.current.width !== W || underCacheRef.current.height !== H) {
+        const off = document.createElement("canvas");
+        off.width = W;
+        off.height = H;
+        const offCtx = off.getContext("2d");
+        if (offCtx) {
+          offCtx.imageSmoothingEnabled = false;
+          state.worldModule.renderUnder(offCtx, state.scene, time);
+        }
+        underCacheRef.current = off;
+        cachedSceneRef.current = state.scene;
+      }
+      ctx.drawImage(underCacheRef.current, 0, 0);
 
       // ── Characters (interpolate during found_anim, sorted by y) ──
       const animating = state.phase === "found_anim" && foundStartRef.current != null;

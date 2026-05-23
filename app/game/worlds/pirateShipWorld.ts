@@ -3,16 +3,18 @@ import {
   SPRITE_SIZE,
   drawShipWheel, drawCannon, drawTreasureChest, drawTreasureMap,
   drawCaptain, drawParrot, drawSkeleton, drawIsland,
+  drawBarrel, drawRopeCoil, drawLantern, drawAnchor,
 } from "../characters/sprites";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;
 export const HEIGHT = 800;
-export const NPC_COUNT = 38;
+export const NPC_COUNT = 58;
 const MARGIN = 12;
 
 type Cannon = { x: number; y: number; vertical: boolean };
 type Special = { x: number; y: number; kind: "captain" | "parrot" | "skeleton" };
+type Pt = { x: number; y: number };
 
 export type PirateScene = {
   deck: { x: number; y: number; w: number; h: number };
@@ -24,6 +26,10 @@ export type PirateScene = {
   mapTable: { x: number; y: number };
   specials: Special[];
   islands: { x: number; y: number }[];
+  barrels: Pt[];
+  ropeCoils: Pt[];
+  lanterns: Pt[];
+  anchor: Pt;
 };
 
 function buildScene(): PirateScene {
@@ -33,21 +39,64 @@ function buildScene(): PirateScene {
 
   const wheel = { x: WIDTH / 2, y: deck.y + 40 };
 
-  // Cannons along port (left) and starboard (right)
+  // Cannons along port (left) and starboard (right) — más densos
   const cannons: Cannon[] = [];
-  for (let i = 0; i < 3; i++) {
-    cannons.push({ x: deck.x + 18, y: deck.y + 140 + i * 130, vertical: false });
-    cannons.push({ x: deck.x + deck.w - 18, y: deck.y + 140 + i * 130, vertical: false });
+  for (let i = 0; i < 5; i++) {
+    cannons.push({ x: deck.x + 18, y: deck.y + 100 + i * 90, vertical: false });
+    cannons.push({ x: deck.x + deck.w - 18, y: deck.y + 100 + i * 90, vertical: false });
   }
+  // 2 cañones en bow apuntando arriba
+  cannons.push({ x: deck.x + deck.w / 2 - 30, y: bowY + 15, vertical: true });
+  cannons.push({ x: deck.x + deck.w / 2 + 30, y: bowY + 15, vertical: true });
 
   const chest = { x: WIDTH / 2 - 30, y: deck.y + deck.h - 80 };
   const mapTable = { x: WIDTH / 2 + 50, y: deck.y + 140 };
 
+  // Especiales — más loros + esqueletos
   const specials: Special[] = [
     { x: wheel.x + 20, y: wheel.y + 6, kind: "captain" },
     { x: wheel.x + 26, y: wheel.y - 4, kind: "parrot" },
+    { x: WIDTH / 2 - 80, y: deck.y + 60, kind: "parrot" },
+    { x: WIDTH / 2 + 80, y: deck.y + 240, kind: "parrot" },
     { x: deck.x + 50, y: deck.y + deck.h - 60, kind: "skeleton" },
+    { x: deck.x + deck.w - 60, y: deck.y + deck.h - 90, kind: "skeleton" },
   ];
+
+  // Barriles agrupados
+  const barrels: Pt[] = [
+    { x: deck.x + 40, y: deck.y + 80 },
+    { x: deck.x + 65, y: deck.y + 85 },
+    { x: deck.x + 40, y: deck.y + 110 },
+    { x: deck.x + deck.w - 40, y: deck.y + 80 },
+    { x: deck.x + deck.w - 65, y: deck.y + 85 },
+    { x: deck.x + deck.w - 40, y: deck.y + 110 },
+    { x: WIDTH / 2 - 40, y: deck.y + deck.h - 130 },
+    { x: WIDTH / 2 + 40, y: deck.y + deck.h - 30 },
+    { x: deck.x + 70, y: deck.y + deck.h - 30 },
+    { x: deck.x + deck.w - 70, y: deck.y + deck.h - 30 },
+  ];
+
+  // Rollos de soga en cubierta
+  const ropeCoils: Pt[] = [
+    { x: deck.x + 90, y: deck.y + 220 },
+    { x: deck.x + deck.w - 90, y: deck.y + 320 },
+    { x: WIDTH / 2 - 60, y: deck.y + 380 },
+    { x: WIDTH / 2 + 60, y: deck.y + 430 },
+    { x: deck.x + 60, y: deck.y + 480 },
+    { x: deck.x + deck.w - 60, y: deck.y + 520 },
+  ];
+
+  // Linternas iluminando cubierta
+  const lanterns: Pt[] = [
+    { x: deck.x + 30, y: bowY + 30 },
+    { x: deck.x + deck.w - 30, y: bowY + 30 },
+    { x: deck.x + 30, y: sternY - 30 },
+    { x: deck.x + deck.w - 30, y: sternY - 30 },
+    { x: WIDTH / 2, y: deck.y + deck.h / 2 },
+  ];
+
+  // Ancla en proa
+  const anchor: Pt = { x: deck.x + 30, y: deck.y + 50 };
 
   // Islands floating in distance
   const islands = [
@@ -57,7 +106,7 @@ function buildScene(): PirateScene {
     { x: WIDTH - 60, y: HEIGHT - 40 },
   ];
 
-  return { deck, bowY, sternY, wheel, cannons, chest, mapTable, specials, islands };
+  return { deck, bowY, sternY, wheel, cannons, chest, mapTable, specials, islands, barrels, ropeCoils, lanterns, anchor };
 }
 
 // Hull shape — chars only allowed on deck
@@ -98,6 +147,24 @@ function collides(scene: PirateScene, x: number, y: number, r: number): boolean 
     const dxs = s.x - x, dys = s.y - y;
     if (dxs * dxs + dys * dys < (16 + r) * (16 + r)) return true;
   }
+  // barrels
+  for (const b of scene.barrels) {
+    const dxb = b.x - x, dyb = b.y - y;
+    if (dxb * dxb + dyb * dyb < (14 + r) * (14 + r)) return true;
+  }
+  // rope coils (small)
+  for (const rc of scene.ropeCoils) {
+    const dxr = rc.x - x, dyr = rc.y - y;
+    if (dxr * dxr + dyr * dyr < (10 + r) * (10 + r)) return true;
+  }
+  // lanterns
+  for (const l of scene.lanterns) {
+    const dxl = l.x - x, dyl = l.y - y;
+    if (dxl * dxl + dyl * dyl < (8 + r) * (8 + r)) return true;
+  }
+  // anchor
+  const dxa = scene.anchor.x - x, dya = scene.anchor.y - y;
+  if (dxa * dxa + dya * dya < (16 + r) * (16 + r)) return true;
   return false;
 }
 
@@ -224,10 +291,15 @@ function drawHull(ctx: CanvasRenderingContext2D, scene: PirateScene) {
 function renderUnder(ctx: CanvasRenderingContext2D, _scene: unknown, _time: number) {
   const scene = _scene as PirateScene;
   drawHull(ctx, scene);
+  // anchor (lower z than chars)
+  drawAnchor(ctx, scene.anchor.x, scene.anchor.y);
   // wheel
   drawShipWheel(ctx, scene.wheel.x, scene.wheel.y);
   // cannons
   for (const c of scene.cannons) drawCannon(ctx, c.x, c.y, c.vertical);
+  // barrels + rope coils
+  for (const b of scene.barrels) drawBarrel(ctx, b.x, b.y);
+  for (const rc of scene.ropeCoils) drawRopeCoil(ctx, rc.x, rc.y);
   // chest + map
   drawTreasureChest(ctx, scene.chest.x, scene.chest.y);
   drawTreasureMap(ctx, scene.mapTable.x, scene.mapTable.y);
@@ -239,7 +311,11 @@ function renderUnder(ctx: CanvasRenderingContext2D, _scene: unknown, _time: numb
   }
 }
 
-function renderOver(_ctx: CanvasRenderingContext2D, _scene: unknown, _time: number) {}
+function renderOver(ctx: CanvasRenderingContext2D, _scene: unknown, _time: number) {
+  const scene = _scene as PirateScene;
+  // Lanterns drawn on top so glow shows over NPCs near them
+  for (const l of scene.lanterns) drawLantern(ctx, l.x, l.y);
+}
 
 export const worldModule: WorldModule = {
   width: WIDTH,
