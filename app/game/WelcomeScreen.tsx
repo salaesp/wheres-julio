@@ -187,6 +187,17 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
         >
           ELEGIR MUNDO
         </button>
+        <p className={styles.credit}>
+          creado por{" "}
+          <a
+            href="https://github.com/salaesp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.creditLink}
+          >
+            @salaesp
+          </a>
+        </p>
       </div>
 
       {pickerOpen && (
