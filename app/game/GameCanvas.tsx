@@ -5,7 +5,7 @@ import { useGameState } from "./hooks/useGameState";
 import {
   drawPerson, drawJulio, drawJulioFound,
   SPRITE_SIZE,
-} from "./characters/sprites";
+} from "./sprites";
 import { getAccent } from "./worlds/accents";
 import { JulioHeadIcon, MagnifierIcon, PieProgress, HomeIcon } from "./HudIcons";
 
@@ -101,11 +101,14 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
       ctx.clearRect(0, 0, viewport.w, viewport.h);
 
       const scale = Math.min(viewport.w / W, viewport.h / H);
-      const offX = (viewport.w - W * scale) / 2;
-      const offY = (viewport.h - H * scale) / 2;
+      const offX = Math.floor((viewport.w - W * scale) / 2);
+      const offY = Math.floor((viewport.h - H * scale) / 2);
       fitRef.current = { scale, offX, offY };
 
-      ctx.fillStyle = "#000";
+      // Background behind map — GBA navy, not raw black.
+      // With width-fill scaling the portrait map covers the full width so
+      // this only shows below the map when the stage is taller than the map.
+      ctx.fillStyle = "#181850";
       ctx.fillRect(0, 0, viewport.w, viewport.h);
 
       ctx.save();
@@ -176,9 +179,10 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
       }
 
       for (const c of all) {
-        if (c.isJulio) drawJulio(ctx, c.x, c.y);
-        else drawPerson(ctx, c.x, c.y, c.variant);
+        if (c.isJulio) drawJulio(ctx, c.x, c.y, time);
+        else drawPerson(ctx, c.x, c.y, c.variant, time);
       }
+
 
       // ── World over-layer (canopies, umbrellas) ──
       state.worldModule.renderOver(ctx, state.scene, time);

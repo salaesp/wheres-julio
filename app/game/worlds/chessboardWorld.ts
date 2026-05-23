@@ -2,7 +2,7 @@ import { createRng, randRange, randInt } from "../utils/seededRandom";
 import {
   SPRITE_SIZE, drawChessPiece, drawHourglass, drawGiantHand,
   type ChessKind,
-} from "../characters/sprites";
+} from "../sprites";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;
@@ -123,9 +123,9 @@ function placeCharacters(seed: number, _scene: unknown): Placement {
         // edges of table
         if (rng() < 0.5) {
           x = randRange(rng, 20, WIDTH - 20);
-          y = rng() < 0.5 ? randRange(rng, 130, b.y - 20) : randRange(rng, b.y + b.size + 20, HEIGHT - 20);
+          y = rng() < 0.5 ? randRange(rng, 20, b.y - 20) : randRange(rng, b.y + b.size + 20, HEIGHT - 20);
         } else {
-          y = randRange(rng, 140, HEIGHT - 20);
+          y = randRange(rng, 20, HEIGHT - 20);
           x = rng() < 0.5 ? randRange(rng, 20, b.x - 14) : randRange(rng, b.x + b.size + 14, WIDTH - 20);
         }
       }

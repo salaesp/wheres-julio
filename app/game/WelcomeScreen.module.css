@@ -1,11 +1,14 @@
+/* ── GBA Pokémon style — WelcomeScreen ── */
+
 .root {
   position: fixed;
   inset: 0;
-  background: #5ab8e8;
+  /* GBA navy backdrop behind the canvas */
+  background: #181850;
   overflow: hidden;
-  font-family: "Courier New", ui-monospace, monospace;
   image-rendering: pixelated;
 }
+
 .canvas {
   position: absolute;
   inset: 0;
@@ -15,193 +18,217 @@
   image-rendering: crisp-edges;
   pointer-events: none;
 }
+
+/* ─────────────────────────────────────────────
+   Bottom bar — GBA dialog box
+   White/cream fill, thick double navy border,
+   positioned over the canvas like a GBA text box.
+───────────────────────────────────────────── */
 .bottomBar {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 6vh;
+  left: clamp(8px, 2vw, 24px);
+  right: clamp(8px, 2vw, 24px);
+  bottom: clamp(8px, 2vh, 20px);
+  /* GBA dialog box cream fill */
+  background: #f0f0d0;
+  /* Outer navy border + inner lilac inset highlight */
+  border: 4px solid #181850;
+  outline: 2px solid #9898f0;
+  outline-offset: -6px;
+  border-radius: 0;
+  /* Hard 4px drop-shadow, no blur */
+  box-shadow: 4px 4px 0 0 #181850;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 2;
+  padding: clamp(14px, 2.5vh, 22px) clamp(16px, 3vw, 28px) clamp(12px, 2vh, 18px);
+  gap: clamp(8px, 1.4vh, 14px);
+  /* Step into view from bottom — stepped like a GBA dialog slide-up */
+  animation: dialogSlideUp 0.2s steps(4, end);
 }
+
+/* ── EMPEZAR — main action button ── */
 .startBtn {
-  font-family: "Courier New", ui-monospace, monospace;
-  font-weight: 900;
-  font-size: clamp(20px, 5vw, 30px);
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-weight: 400;
+  font-size: clamp(14px, 3vw, 20px);
   letter-spacing: 0.16em;
-  padding: 16px 40px;
+  padding: clamp(10px, 2vh, 14px) clamp(28px, 6vw, 48px);
   border: 0;
   border-radius: 0;
+  /* GBA accent yellow button */
   background: #ffe066;
-  color: #1a1a1a;
+  color: #181850;
   cursor: pointer;
-  /* pixel-art border via box-shadow stacking (hard edges, no blur) */
+  /* Pixel-art raised border */
   box-shadow:
-    0 0 0 4px #1a1a1a,
-    8px 8px 0 4px #1a1a1a,
-    inset -4px -4px 0 0 #b8861a,
-    inset 4px 4px 0 0 #fff2a8;
-  transform: translate(0, 0);
-  transition: transform 0.08s, box-shadow 0.08s;
+    0 0 0 4px #181850,
+    4px 4px 0 4px #181850,
+    inset 3px 3px 0 0 #fff8c0,
+    inset -3px -3px 0 0 #b8861a;
+  transition: transform 0.06s, box-shadow 0.06s;
   image-rendering: pixelated;
   -webkit-font-smoothing: none;
-  font-smooth: never;
-  text-rendering: geometricPrecision;
-  animation: pulse 1.6s steps(8) infinite;
+  /* GBA-style blink/pulse — stepped */
+  animation: pulse 1.6s steps(2, end) infinite;
 }
-.startBtn:hover { background: #fff09a; }
+.startBtn:hover {
+  background: #fff0a0;
+}
 .startBtn:active {
-  transform: translate(4px, 4px);
+  transform: translate(2px, 2px);
   box-shadow:
-    0 0 0 4px #1a1a1a,
-    4px 4px 0 4px #1a1a1a,
-    inset -4px -4px 0 0 #b8861a,
-    inset 4px 4px 0 0 #fff2a8;
+    0 0 0 4px #181850,
+    2px 2px 0 4px #181850,
+    inset 3px 3px 0 0 #b8861a,
+    inset -3px -3px 0 0 #fff8c0;
 }
+
+/* Hint text — small pixel font, dark on cream */
 .hint {
-  margin: 22px 0 0;
-  font-size: clamp(11px, 2.6vw, 15px);
-  color: #fff;
-  letter-spacing: 0.12em;
-  text-shadow:
-    2px 2px 0 #1a1a1a,
-    -2px 0 0 #1a1a1a,
-    2px 0 0 #1a1a1a,
-    0 -2px 0 #1a1a1a,
-    0 2px 0 #1a1a1a;
-  -webkit-font-smoothing: none;
-  font-smooth: never;
-}
-@keyframes pulse {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(0, -4px); }
-}
-.credit {
-  margin: clamp(10px, 2vh, 18px) 0 0;
-  font-family: "VT323", "Courier New", monospace;
-  font-size: clamp(13px, 2.4vw, 16px);
-  letter-spacing: 0.06em;
-  color: #fff;
-  text-shadow:
-    2px 2px 0 #1a1a1a,
-    -2px 0 0 #1a1a1a,
-    2px 0 0 #1a1a1a,
-    0 -2px 0 #1a1a1a,
-    0 2px 0 #1a1a1a;
-  -webkit-font-smoothing: none;
-  font-smooth: never;
-}
-.creditLink {
-  color: #ffe066;
-  text-decoration: none;
-  border-bottom: 2px solid #ffe066;
-  padding-bottom: 1px;
-}
-.creditLink:hover { color: #fff09a; border-bottom-color: #fff09a; }
-.pickerToggle {
-  margin-top: clamp(12px, 2.4vh, 22px);
+  margin: 0;
   font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: clamp(9px, 1.6vw, 12px);
-  letter-spacing: 0.14em;
-  padding: 10px 22px;
-  background: rgba(26, 26, 26, 0.85);
-  color: #ffe066;
+  font-size: clamp(7px, 1.3vw, 9px);
+  color: #484848;
+  letter-spacing: 0.08em;
+  line-height: 1.8;
+  text-align: center;
+  -webkit-font-smoothing: none;
+}
+
+/* "ELEGIR MUNDO" secondary button — GBA menu style */
+.pickerToggle {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: clamp(8px, 1.4vw, 11px);
+  letter-spacing: 0.1em;
+  padding: clamp(8px, 1.4vh, 12px) clamp(16px, 3vw, 24px);
+  background: #2838a0;
+  color: #f0f0d0;
   border: 0;
   border-radius: 0;
   cursor: pointer;
   box-shadow:
-    0 0 0 3px #1a1a1a,
-    4px 4px 0 3px #1a1a1a,
-    inset -3px -3px 0 0 rgba(0, 0, 0, 0.4),
-    inset 3px 3px 0 0 rgba(255, 255, 255, 0.08);
+    0 0 0 3px #181850,
+    3px 3px 0 3px #0c0c38,
+    inset 2px 2px 0 0 #9898f0,
+    inset -2px -2px 0 0 #0c0c38;
   -webkit-font-smoothing: none;
-  font-smooth: never;
   transition: transform 0.06s, box-shadow 0.06s;
 }
-.pickerToggle:hover { background: #2a2a2a; }
+.pickerToggle:hover { background: #3848c0; }
 .pickerToggle:active {
-  transform: translate(2px, 2px);
+  transform: translate(1px, 1px);
   box-shadow:
-    0 0 0 3px #1a1a1a,
-    2px 2px 0 3px #1a1a1a,
-    inset -3px -3px 0 0 rgba(0, 0, 0, 0.4),
-    inset 3px 3px 0 0 rgba(255, 255, 255, 0.08);
+    0 0 0 3px #181850,
+    2px 2px 0 3px #0c0c38,
+    inset 2px 2px 0 0 #0c0c38,
+    inset -2px -2px 0 0 #9898f0;
 }
+
+/* Credit line */
+.credit {
+  margin: 0;
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: clamp(6px, 1vw, 8px);
+  letter-spacing: 0.06em;
+  color: #686868;
+  -webkit-font-smoothing: none;
+}
+.creditLink {
+  color: #2838a0;
+  text-decoration: none;
+  border-bottom: 2px solid #2838a0;
+  padding-bottom: 1px;
+}
+.creditLink:hover { color: #181850; border-bottom-color: #181850; }
+
+/* ─────────────────────────────────────────────
+   World picker modal — GBA menu panel
+───────────────────────────────────────────── */
 .pickerBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  /* Dark but not full black — GBA dark overlay */
+  background: rgba(0, 0, 0, 0.78);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(12px, 4vw, 32px);
-  animation: pickerFadeIn 0.15s steps(3, end);
+  padding: clamp(10px, 3vw, 28px);
+  animation: fadeIn 0.12s steps(2, end);
 }
+
 .pickerPanel {
-  background: #1a1a1a;
-  color: #fff;
-  padding: clamp(14px, 2.4vw, 22px);
-  max-width: min(94vw, 760px);
+  /* GBA cream menu panel */
+  background: #f0f0d0;
+  color: #282828;
+  /* Thick double border */
+  border: 4px solid #181850;
+  outline: 2px solid #9898f0;
+  outline-offset: -6px;
+  border-radius: 0;
+  padding: clamp(12px, 2vw, 20px);
+  max-width: min(92vw, 720px);
   width: 100%;
-  max-height: 88vh;
+  max-height: 86vh;
   overflow-y: auto;
-  box-shadow:
-    0 0 0 4px #ffe066,
-    8px 8px 0 4px #1a1a1a;
+  /* Hard drop shadow */
+  box-shadow: 6px 6px 0 0 #181850;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 2vh, 18px);
-  animation: pickerPop 0.2s steps(4, end);
+  gap: clamp(10px, 1.8vh, 16px);
+  animation: popPop 0.18s steps(3, end);
 }
+
 .pickerHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  /* Thin separator — navy line */
+  padding-bottom: clamp(8px, 1.2vh, 12px);
+  border-bottom: 3px solid #181850;
 }
+
 .pickerTitle {
   font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: clamp(11px, 2vw, 15px);
-  letter-spacing: 0.14em;
-  color: #ffe066;
+  font-size: clamp(10px, 1.8vw, 14px);
+  letter-spacing: 0.12em;
+  color: #181850;
+  text-shadow: 1px 1px 0 #9898f0;
   -webkit-font-smoothing: none;
-  font-smooth: never;
 }
+
 .pickerClose {
   font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: 18px;
-  width: 32px;
-  height: 32px;
-  background: #ffe066;
-  color: #1a1a1a;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  background: #181850;
+  color: #f0f0d0;
   border: 0;
   border-radius: 0;
   cursor: pointer;
   box-shadow:
-    0 0 0 3px #1a1a1a,
-    3px 3px 0 3px #1a1a1a;
+    inset 2px 2px 0 0 #9898f0,
+    inset -2px -2px 0 0 #0c0c38,
+    3px 3px 0 0 #0c0c38;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   line-height: 1;
+  -webkit-font-smoothing: none;
 }
-.pickerClose:hover { background: #fff09a; }
-.pickerClose:active { transform: translate(2px, 2px); box-shadow: 0 0 0 3px #1a1a1a; }
-@keyframes pickerFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes pickerPop {
-  from { transform: scale(0.92); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
+.pickerClose:hover { background: #2838a0; }
+.pickerClose:active { transform: translate(1px, 1px); box-shadow: inset 2px 2px 0 0 #0c0c38; }
+
+/* ── World level grid ── */
 .levelGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(6px, 1.2vw, 10px);
+  gap: clamp(6px, 1vw, 10px);
   width: 100%;
 }
 @media (max-width: 720px) {
@@ -210,13 +237,16 @@
 @media (max-width: 420px) {
   .levelGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Individual world chip — GBA menu item style */
 .levelChip {
   --chip-accent: #ffe066;
   font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: clamp(8px, 1.3vw, 11px);
-  letter-spacing: 0.06em;
-  line-height: 1.3;
-  color: #1a1a1a;
+  font-size: clamp(7px, 1.1vw, 10px);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  /* White text on accent color — like a GBA menu highlight */
+  color: #181850;
   background: var(--chip-accent);
   border: 0;
   border-radius: 0;
@@ -224,25 +254,44 @@
   cursor: pointer;
   text-align: center;
   white-space: normal;
-  /* pixel-art border via box-shadow */
+  /* Pixel-art raised border using chip accent */
   box-shadow:
-    0 0 0 3px #1a1a1a,
-    4px 4px 0 3px #1a1a1a,
-    inset -3px -3px 0 0 color-mix(in srgb, var(--chip-accent) 65%, #000),
-    inset 3px 3px 0 0 color-mix(in srgb, var(--chip-accent) 70%, #fff);
+    0 0 0 3px #181850,
+    3px 3px 0 3px #0c0c38,
+    inset 2px 2px 0 0 rgba(255, 255, 255, 0.55),
+    inset -2px -2px 0 0 rgba(0, 0, 0, 0.25);
   image-rendering: pixelated;
   -webkit-font-smoothing: none;
-  font-smooth: never;
   transition: transform 0.06s, box-shadow 0.06s;
 }
 .levelChip:hover {
-  background: color-mix(in srgb, var(--chip-accent) 80%, #fff);
+  filter: brightness(1.08);
 }
 .levelChip:active {
-  transform: translate(2px, 2px);
+  transform: translate(1px, 1px);
   box-shadow:
-    0 0 0 3px #1a1a1a,
-    2px 2px 0 3px #1a1a1a,
-    inset -3px -3px 0 0 color-mix(in srgb, var(--chip-accent) 65%, #000),
-    inset 3px 3px 0 0 color-mix(in srgb, var(--chip-accent) 70%, #fff);
+    0 0 0 3px #181850,
+    2px 2px 0 3px #0c0c38,
+    inset 2px 2px 0 0 rgba(0, 0, 0, 0.25),
+    inset -2px -2px 0 0 rgba(255, 255, 255, 0.55);
+}
+
+/* ─────────────────────────────────────────────
+   Animations — stepped like GBA
+───────────────────────────────────────────── */
+@keyframes pulse {
+  0%,  100% { opacity: 1; }
+  50%        { opacity: 0.72; }
+}
+@keyframes dialogSlideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes popPop {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
 }

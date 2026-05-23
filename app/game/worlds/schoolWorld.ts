@@ -3,7 +3,7 @@ import {
   SPRITE_SIZE,
   drawHopscotch, drawSchoolBall, drawJumpRope, drawSchoolBench,
   drawBackpack, drawTrashCan, drawSchoolEntrance, drawFlagpoleAR,
-} from "../characters/sprites";
+} from "../sprites";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;
@@ -116,7 +116,7 @@ function placeCharacters(seed: number, _scene: unknown): Placement {
   function tryPlace(): { x: number; y: number } {
     for (let i = 0; i < 1000; i++) {
       const x = randRange(rng, MARGIN, WIDTH - MARGIN);
-      const y = randRange(rng, 180, HEIGHT - MARGIN - 30);
+      const y = randRange(rng, MARGIN, HEIGHT - MARGIN - 30);
       if (collides(scene, x, y, 8)) continue;
       let ok = true;
       for (const n of npcs) {

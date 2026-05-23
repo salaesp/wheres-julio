@@ -47,3 +47,22 @@ export function pellipse(
     }
   }
 }
+
+export function drawAsciiGrid(
+  ctx: Ctx,
+  rows: string[],
+  palette: Record<string, string | null>,
+  ox = 0,
+  oy = 0,
+  px = PX,
+) {
+  for (let y = 0; y < rows.length; y++) {
+    const row = rows[y];
+    for (let x = 0; x < row.length; x++) {
+      const col = palette[row[x]];
+      if (!col) continue;
+      ctx.fillStyle = col;
+      ctx.fillRect((ox + x) * px, (oy + y) * px, px, px);
+    }
+  }
+}

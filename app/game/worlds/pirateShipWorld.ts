@@ -4,7 +4,7 @@ import {
   drawShipWheel, drawCannon, drawTreasureChest, drawTreasureMap,
   drawCaptain, drawParrot, drawSkeleton, drawIsland,
   drawBarrel, drawRopeCoil, drawLantern, drawAnchor,
-} from "../characters/sprites";
+} from "../sprites";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;

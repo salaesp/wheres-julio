@@ -4,7 +4,7 @@ import {
   drawFinishArch, drawBarrier, drawHydrationTable,
   drawSpectatorFlag, drawSign, drawCameraProp,
   drawTreeTrunk, drawTreeCanopy,
-} from "../characters/sprites";
+} from "../sprites";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;

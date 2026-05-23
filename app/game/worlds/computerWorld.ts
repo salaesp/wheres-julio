@@ -2,7 +2,7 @@ import { createRng, randRange, randInt } from "../utils/seededRandom";
 import {
   SPRITE_SIZE,
   drawCPU, drawRAMStick, drawCable, drawBugDigital, drawRobotAnt,
-} from "../characters/sprites";
+} from "../sprites";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;
@@ -103,7 +103,7 @@ function placeCharacters(seed: number, _scene: unknown): Placement {
   function tryPlace(): { x: number; y: number } {
     for (let i = 0; i < 1000; i++) {
       const x = randRange(rng, MARGIN, WIDTH - MARGIN);
-      const y = randRange(rng, 130, HEIGHT - MARGIN - 30);
+      const y = randRange(rng, MARGIN, HEIGHT - MARGIN - 30);
       if (collides(scene, x, y, 10)) continue;
       let ok = true;
       for (const n of npcs) {

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import styles from "./WelcomeScreen.module.css";
-import { drawJulioFound } from "./characters/sprites";
+import { drawJulioFound } from "./sprites";
 import { WORLDS } from "./worlds";
 import { getAccent } from "./worlds/accents";
 
@@ -101,14 +101,10 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, w, h);
 
-      // ── Pixel sky: stepped gradient (4 bands) ──
+      // ── Pixel sky: flat single color (GBA spec — no gradients) ──
       const skyH = h * 0.65;
-      const bands = ["#5ab8e8", "#7ec8e8", "#9cd8ee", "#bfe4f0"];
-      const bh = skyH / bands.length;
-      for (let i = 0; i < bands.length; i++) {
-        ctx.fillStyle = bands[i];
-        ctx.fillRect(0, i * bh, w, Math.ceil(bh) + 1);
-      }
+      ctx.fillStyle = "#5ab8e8";
+      ctx.fillRect(0, 0, w, skyH);
       // Sun (pixel circle)
       const sunPx = Math.min(10, Math.max(4, Math.floor(w / 80)));
       drawPixelSun(ctx, w - sunPx * 14, sunPx * 8, sunPx);
@@ -177,7 +173,7 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
       // ── Pixel title (capped width + height so doesn't blow up on wide screens) ──
       const maxLineW = Math.min(w * 0.85, 520);
       const smallTitleH = Math.min(h * 0.06, 44);
-      drawPixelText(ctx, "DONDE ESTA", w / 2, h * 0.06, "#ffffff", "#1a1a1a", smallTitleH, maxLineW);
+      drawPixelText(ctx, "DONDE ESTÁ", w / 2, h * 0.06, "#ffffff", "#1a1a1a", smallTitleH, maxLineW);
       const bigTitleH = Math.min(h * 0.14, 110);
       drawPixelText(ctx, "JULIO?", w / 2, h * 0.13, "#ffe066", "#1a1a1a", bigTitleH, maxLineW);
 

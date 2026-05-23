@@ -6,7 +6,7 @@ import {
   drawBench, drawHedge, drawFountain,
   drawPath, drawSandbox, drawFlowerbed,
   drawSlide, drawSwingSet, drawCarousel, drawSeesaw,
-} from "../characters/sprites";
+} from "../sprites";
 import { drawGbaGrass, drawGbaWildFlowers } from "./gbaStyle";
 import type { WorldModule } from "./types";
 
@@ -136,7 +136,7 @@ export function placeCharacters(seed: number, scene: Scene): Placement {
   const minDist = SPRITE_SIZE * 0.35;
 
   function tryPlace(): { x: number; y: number } {
-    const topPad = 90; // keep chars below HUD
+    const topPad = MARGIN;
     for (let i = 0; i < 600; i++) {
       const x = randRange(rng, MARGIN, WORLD_WIDTH - MARGIN);
       const y = randRange(rng, topPad, WORLD_HEIGHT - MARGIN - 40);

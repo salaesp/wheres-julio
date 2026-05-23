@@ -1,7 +1,7 @@
 // Shared character-placement helper. Each world declares colliders + (optional)
 // allowed zones, this helper does the retry-loop + minDist enforcement.
 import { createRng, randRange, randInt } from "../utils/seededRandom";
-import { SPRITE_SIZE } from "../characters/primitives";
+import { SPRITE_SIZE } from "../utils/primitives";
 import type { NpcPos, Placement } from "./types";
 
 export type PlacementOpts = {

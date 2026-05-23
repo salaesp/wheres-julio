@@ -5,7 +5,7 @@ import {
   drawCow, drawHorse, drawDog, drawDuck,
   drawTractor, drawHayBale, drawCropRow, drawPond,
   drawWindmill, drawScarecrow,
-} from "../characters/sprites";
+} from "../sprites";
 import { drawGbaGrass, drawGbaWildFlowers } from "./gbaStyle";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
@@ -151,7 +151,7 @@ function placeCharacters(seed: number, _scene: unknown): Placement {
   function tryPlace(): { x: number; y: number } {
     for (let i = 0; i < 800; i++) {
       const x = randRange(rng, MARGIN, WIDTH - MARGIN);
-      const y = randRange(rng, 100, HEIGHT - MARGIN - 30);
+      const y = randRange(rng, MARGIN, HEIGHT - MARGIN - 30);
       if (collides(scene, x, y, 10)) continue;
       let ok = true;
       for (const n of npcs) {

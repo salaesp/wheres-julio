@@ -1,13 +1,35 @@
+/* ── GBA Pokémon style — global rules ── */
 * { box-sizing: border-box; }
+
 html, body {
   margin: 0;
   padding: 0;
-  background: #000;
-  color: #fff;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* GBA navy — the letterbox / stage backdrop */
+  background: #181850;
+  color: #f0f0d0;
+  /* Press Start 2P for all text by default; individual components can override */
+  font-family: "Press Start 2P", "Courier New", ui-monospace, monospace;
   overflow: hidden;
   height: 100%;
   user-select: none;
   -webkit-user-select: none;
+  /* Disable OS font smoothing globally */
+  -webkit-font-smoothing: none;
+  font-smooth: never;
 }
-canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* All pixel art / canvas elements must never blur */
+canvas,
+img,
+svg {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Remove default button styles */
+button {
+  font-family: "Press Start 2P", "Courier New", ui-monospace, monospace;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}

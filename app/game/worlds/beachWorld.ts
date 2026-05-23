@@ -1,10 +1,10 @@
 import { createRng, randRange, randInt } from "../utils/seededRandom";
-import { SPRITE_SIZE } from "../characters/sprites";
+import { SPRITE_SIZE } from "../sprites";
 import {
   drawUmbrella, drawBeachChair, drawTowel, drawTent, drawSandcastle,
   drawBeachBall, drawFloatie, drawSurfboard, drawShell, drawStarfish,
   drawLifeguardTower,
-} from "../characters/sprites";
+} from "../sprites";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;
