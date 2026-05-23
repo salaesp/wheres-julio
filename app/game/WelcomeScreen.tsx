@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./WelcomeScreen.module.css";
 import { drawJulioFound } from "./characters/sprites";
 import { WORLDS } from "./worlds";
@@ -71,6 +71,14 @@ function drawCloud(ctx: CanvasRenderingContext2D, x: number, y: number, px: numb
 export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: number) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPickerOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pickerOpen]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -172,26 +180,53 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
       <div className={styles.bottomBar}>
         <button className={styles.startBtn} onClick={() => onStart()}>EMPEZAR</button>
         <p className={styles.hint}>Encuentralo 3 veces en cada mundo</p>
-        <div className={styles.levelPicker} aria-label="Elegir mundo de inicio">
-          <span className={styles.levelPickerLabel}>O EMPEZÁ POR…</span>
-          <div className={styles.levelGrid}>
-            {WORLDS.map((w, i) => {
-              const id = i + 1;
-              const accent = getAccent(id);
-              return (
-                <button
-                  key={id}
-                  className={styles.levelChip}
-                  style={{ "--chip-accent": accent } as React.CSSProperties}
-                  onClick={() => onStart(id)}
-                >
-                  {w.title}
-                </button>
-              );
-            })}
+        <button
+          className={styles.pickerToggle}
+          onClick={() => setPickerOpen(true)}
+          aria-haspopup="dialog"
+        >
+          ELEGIR MUNDO
+        </button>
+      </div>
+
+      {pickerOpen && (
+        <div
+          className={styles.pickerBackdrop}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Elegir mundo de inicio"
+          onClick={() => setPickerOpen(false)}
+        >
+          <div className={styles.pickerPanel} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.pickerHeader}>
+              <span className={styles.pickerTitle}>ELEGÍ UN MUNDO</span>
+              <button
+                className={styles.pickerClose}
+                onClick={() => setPickerOpen(false)}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.levelGrid}>
+              {WORLDS.map((w, i) => {
+                const id = i + 1;
+                const accent = getAccent(id);
+                return (
+                  <button
+                    key={id}
+                    className={styles.levelChip}
+                    style={{ "--chip-accent": accent } as React.CSSProperties}
+                    onClick={() => onStart(id)}
+                  >
+                    {w.title}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
