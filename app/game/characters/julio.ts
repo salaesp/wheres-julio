@@ -1,103 +1,179 @@
 import { PX, SPRITE_SCALE, type Ctx, pellipse } from "../utils/primitives";
-import { drawSprite, currentFrame, type Frame, type SpriteSheet } from "../utils/sprite";
+import { drawSprite, currentFrame, type Palette, type Frame, type SpriteSheet } from "../utils/sprite";
 
-// ── Palette ───────────────────────────────────────────────────────────────────
-// O = #181818 (outline)   G = dino green mid   g = dino dark green
-// L = dino highlight      B = belly light       S = skin
-// H = hair dark           r = blush             . = transparent
-const JULIO_PALETTE = {
+// ── Palette (from dino_front reference sprite) ────────────────────────────────
+const JULIO_PALETTE: Palette = {
   ".": null,
-  "O": "#181818",
-  "G": "#38b838",
-  "g": "#1e7a1e",
-  "L": "#78e858",
-  "B": "#a8e888",
-  "S": "#f8c878",
-  "H": "#5a2c10",
-  "r": "#e87890",
+  "A": "#051003",
+  "B": "#748f57",
+  "C": "#7aa26c",
+  "D": "#74906c",
+  "E": "#e6c673",
+  "F": "#d1d8ca",
+  "G": "#c2c5ac",
+  "H": "#e9c59f",
+  "I": "#637457",
+  "J": "#333928",
+  "K": "#747e62",
+  "L": "#736253",
+  "M": "#688f5f",
+  "N": "#a6b590",
+  "O": "#253320",
+  "P": "#648058",
+  "Q": "#769967",
+  "R": "#56704a",
+  "S": "#cda78e",
+  "T": "#56624b",
+  "U": "#1c1b0e",
+  "V": "#928365",
+  "W": "#655343",
+  "X": "#49392c",
+  "Y": "#445539",
+  "Z": "#67875b",
+  "a": "#a18e6a",
+  "b": "#909a72",
+  "c": "#927660",
+  "d": "#d7b994",
+  "e": "#3f4b35",
+  "f": "#48603f",
+  "g": "#d4c58c",
+  "h": "#97a27d",
+  "i": "#868f6d",
+  "j": "#99a981",
+  "k": "#f2f5f2",
 };
 
-// 16×16 front-facing overworld sprite. cy = vertical center (row 8).
-// Dino hood covers top half; face visible inside mouth opening; belly + dino feet.
-const JULIO_IDLE: Frame = {
-  width: 16, height: 16,
+// ── FRONT IDLE 32×32 (pixel-accurate from reference) ─────────────────────────
+const FRONT_IDLE: Frame = {
+  width: 32, height: 32,
   pixels: [
-    ".......O........",  //  0: single center spike tip
-    "......OgO.......",  //  1: spike
-    ".....OgGgO......",  //  2: spike base
-    "....OGGGGGGО....",  //  3: hood top (8 wide)
-    "....OGgHHgGО....",  //  4: hair in hood mouth opening
-    "....OGgSSSgGО...",  //  5: face skin
-    "....OGgSOSgGО...",  //  6: eyes (O = dark)
-    "....OGgSrSgGО...",  //  7: blush
-    "....OGGGGGGО....",  //  8: hood chin
-    "...OGGGGGGGGО...",  //  9: costume body (10 wide)
-    "...OGGgBBBgGGО..",  // 10: belly patch (B = belly light)
-    "...OGGGBBBGGGО..",  // 11: belly lower
-    "....OGGgGGGО....",  // 12: hips
-    "....OGG..GGО....",  // 13: legs
-    "....OGG..GGО....",  // 14: dino feet
-    "................",  // 15: bottom padding
+    "................................",
+    "..............FJXh..............",
+    ".............FNNNKG.............",
+    ".............KiNNNe.............",
+    "..........FAAOPBBZOJJe..........",
+    ".........NKDDDMMMMDDDKG.........",
+    "........FIDDDMMMMMMDDDDG........",
+    ".......FADCFAPQCjQCAkFDAG.......",
+    ".......FACCQCQQCBQQCCCbAT.......",
+    "......GIPCCZDZQQBQQQRCCITF......",
+    "......FJCCDOYYYYYYYYYCCDIA......",
+    "......AJDCDFXLLWWGLLGNDZIA......",
+    "......UJPOeXWLLWWLcLGGfZIA......",
+    "......AJKOXXLWSHHLcLXXJPJA......",
+    "......AJKOWXdVHHHHdFUUJPIA......",
+    "......AOKJWSSaUHHHXHHaJKIA......",
+    "......FTIJLSSSddHHHHHLJTDF......",
+    ".......FATTaSSdSSHdHLKKAF.......",
+    ".........UeeLWccHaSKKOO.........",
+    ".........ATZPWccVaVIMfU.........",
+    "........GDMMRBVVVVaBCCfG........",
+    ".......FACMBBgSEEEgBQCCAN.......",
+    "......GbbCfBBgEEEEgBBRCbKF......",
+    "......FUBBRBaEEEEEEBBJbbUA......",
+    "......FhGGTRaEEEEEEBBOGGhA......",
+    ".......GAUTRbgEEEEEBZIUAF.......",
+    ".........ORPBBVVBBBPRRUA........",
+    ".........NIPRRRVVKfRZPA.........",
+    ".........AIIDDAAAAIPPIA.........",
+    "..........GIAAO..NTATK..........",
+    "...........GAO...NNAK...........",
+    "................................",
   ],
 };
 
-const JULIO_WALK1: Frame = {
-  width: 16, height: 16,
+const FRONT_WALK1: Frame = {
+  width: 32, height: 32,
   pixels: [
-    ".......O........",
-    "......OgO.......",
-    ".....OgGgO......",
-    "....OGGGGGGО....",
-    "....OGgHHgGО....",
-    "....OGgSSSgGО...",
-    "....OGgSOSgGО...",
-    "....OGgSrSgGО...",
-    "....OGGGGGGО....",
-    "...OGGGGGGGGО...",
-    "...OGGgBBBgGGО..",
-    "...OGGGBBBGGGО..",
-    "....OGGgGGGО....",
-    "....OGG..GGО....",
-    "....OGG..GgО....",  // 14: right leg slightly forward
-    ".........OGO....",  // 15: right foot extended
+    "................................",
+    "..............FJXh..............",
+    ".............FNNNKG.............",
+    ".............KiNNNe.............",
+    "..........FAAOPBBZOJJe..........",
+    ".........NKDDDMMMMDDDKG.........",
+    "........FIDDDMMMMMMDDDDG........",
+    ".......FADCFAPQCjQCAkFDAG.......",
+    ".......FACCQCQQCBQQCCCbAT.......",
+    "......GIPCCZDZQQBQQQRCCITF......",
+    "......FJCCDOYYYYYYYYYCCDIA......",
+    "......AJDCDFXLLWWGLLGNDZIA......",
+    "......UJPOeXWLLWWLcLGGfZIA......",
+    "......AJKOXXLWSHHLcLXXJPJA......",
+    "......AJKOWXdVHHHHdFUUJPIA......",
+    "......AOKJWSSaUHHHXHHaJKIA......",
+    "......FTIJLSSSddHHHHHLJTDF......",
+    ".......FATTaSSdSSHdHLKKAF.......",
+    ".........UeeLWccHaSKKOO.........",
+    ".........ATZPWccVaVIMfU.........",
+    "........GDMMRBVVVVaBCCfG........",
+    ".......FACMBBgSEEEgBQCCAN.......",
+    "......GbbCfBBgEEEEgBBRCbKF......",
+    "......FUBBRBaEEEEEEBBJbbUA......",
+    "......FhGGTRaEEEEEEBBOGGhA......",
+    ".......GAUTRbgEEEEEBZIUAF.......",
+    ".........ORPBBVVBBBPRRUA........",
+    ".........NIPRRRVVKfRZPA.........",
+    ".........AIIDDAAAAIIPP..........",  // right leg shifted
+    "..........GIAAO...NTATK.........",
+    "...........GAO....NNAK..........",
+    "................................",
   ],
 };
 
-const JULIO_WALK2: Frame = {
-  width: 16, height: 16,
+const FRONT_WALK2: Frame = {
+  width: 32, height: 32,
   pixels: [
-    ".......O........",
-    "......OgO.......",
-    ".....OgGgO......",
-    "....OGGGGGGО....",
-    "....OGgHHgGО....",
-    "....OGgSSSgGО...",
-    "....OGgSOSgGО...",
-    "....OGgSrSgGО...",
-    "....OGGGGGGО....",
-    "...OGGGGGGGGО...",
-    "...OGGgBBBgGGО..",
-    "...OGGGBBBGGGО..",
-    "....OGGgGGGО....",
-    "....OGG..GGО....",
-    "....OgG..GGО....",  // 14: left leg forward
-    "....OGO.........",  // 15: left foot extended
+    "................................",
+    "..............FJXh..............",
+    ".............FNNNKG.............",
+    ".............KiNNNe.............",
+    "..........FAAOPBBZOJJe..........",
+    ".........NKDDDMMMMDDDKG.........",
+    "........FIDDDMMMMMMDDDDG........",
+    ".......FADCFAPQCjQCAkFDAG.......",
+    ".......FACCQCQQCBQQCCCbAT.......",
+    "......GIPCCZDZQQBQQQRCCITF......",
+    "......FJCCDOYYYYYYYYYCCDIA......",
+    "......AJDCDFXLLWWGLLGNDZIA......",
+    "......UJPOeXWLLWWLcLGGfZIA......",
+    "......AJKOXXLWSHHLcLXXJPJA......",
+    "......AJKOWXdVHHHHdFUUJPIA......",
+    "......AOKJWSSaUHHHXHHaJKIA......",
+    "......FTIJLSSSddHHHHHLJTDF......",
+    ".......FATTaSSdSSHdHLKKAF.......",
+    ".........UeeLWccHaSKKOO.........",
+    ".........ATZPWccVaVIMfU.........",
+    "........GDMMRBVVVVaBCCfG........",
+    ".......FACMBBgSEEEgBQCCAN.......",
+    "......GbbCfBBgEEEEgBBRCbKF......",
+    "......FUBBRBaEEEEEEBBJbbUA......",
+    "......FhGGTRaEEEEEEBBOGGhA......",
+    ".......GAUTRbgEEEEEBZIUAF.......",
+    ".........ORPBBVVBBBPRRUA........",
+    ".........NIPRRRVVKfRZPA.........",
+    ".........AIIDDAAAAIIPP..........",  // left leg shifted
+    "........GIAAO...NTATK...........",
+    ".........GAO....NNAK............",
+    "................................",
   ],
 };
 
+// ── Sprite sheet (front only) ─────────────────────────────────────────────────
 const JULIO: SpriteSheet = {
-  front: { idle: JULIO_IDLE, walk: [JULIO_WALK1, JULIO_WALK2] },
+  front: { idle: FRONT_IDLE, walk: [FRONT_WALK1, FRONT_WALK2] },
 };
+
+const JULIO_SCALE = 2;
 
 export function drawJulio(ctx: Ctx, cx: number, cy: number, time = 0): void {
   const gcx = cx / PX;
   const gcy = cy / PX;
-  pellipse(ctx, gcx, gcy + 6, 6, 1.5, "#282828");
+  pellipse(ctx, gcx, gcy + 7, 6, 1.5, "#282828");
   const frame = currentFrame(JULIO.front, false, time);
-  drawSprite(ctx, frame, JULIO_PALETTE, cx, cy, PX);
+  drawSprite(ctx, frame, JULIO_PALETTE, cx, cy, JULIO_SCALE);
 }
 
-// ── Found overlay (large, procedural — bigPx is dynamic scale) ───────────────
+// ── Found overlay (large — draws the same sprite at bigPx scale) ──────────────
 export function drawJulioFound(ctx: Ctx, cx: number, cy: number, bigPx: number, withSign = true): void {
   const set = (gx: number, gy: number, c: string) => {
     ctx.fillStyle = c;
@@ -108,67 +184,24 @@ export function drawJulioFound(ctx: Ctx, cx: number, cy: number, bigPx: number, 
     ctx.fillRect(cx + Math.round(gx) * bigPx, cy + Math.round(gy) * bigPx, Math.round(gw) * bigPx, Math.round(gh) * bigPx);
   };
 
-  const outline = "#000000";
-  const g = "#55b639";
-  const gd = "#3d8825";
-  const gl = "#81df54";
-  const belly = "#96df71";
-  const skin = "#f9b282";
-  const hair = "#643c28";
-  const blush = "#f0758a";
-  const eye = "#000000";
-  const tooth = "#ffffff";
+  // shadow
+  rect(-6, 15, 12, 1, "rgba(0,0,0,0.3)");
+
+  // Draw the sprite centered: FRONT_IDLE is 32×32, so offset by -16 cells
+  drawSprite(ctx, FRONT_IDLE, JULIO_PALETTE, cx, cy, bigPx);
+
   const signBg = "#ffffff";
   const heart = "#bd407a";
-
-  rect(-5, 14, 11, 1, "rgba(0,0,0,0.3)");
-  rect(-8, 10, 3, 2, gd);
-  rect(-9, 11, 3, 1, outline);
-  rect(-6, 12, 2, 1, outline);
-  rect(-5, 11, 3, 3, gd);
-  rect(-5, 14, 4, 1, outline);
-  rect(2, 11, 3, 3, g);
-  rect(2, 11, 1, 3, gd);
-  rect(1, 14, 4, 1, outline);
-  rect(-4, 3, 9, 8, g);
-  rect(-4, 3, 1, 8, gd);
-  rect(-5, 3, 1, 7, outline);
-  rect(5, 3, 1, 7, outline);
-  rect(-2, 5, 5, 5, belly);
-  set(-1, 5, outline); set(-1, 7, outline); set(-1, 9, outline);
-  rect(-7, 2, 3, 2, g);
-  rect(-7, 2, 3, 1, gl);
-  rect(-8, 1, 1, 3, outline);
-  rect(5, 2, 3, 2, g);
-  rect(5, 2, 3, 1, gl);
-  rect(8, 1, 1, 3, outline);
-  rect(-6, -11, 13, 13, g);
-  rect(-6, -11, 13, 1, gl);
-  rect(-6, -10, 1, 11, gl);
-  rect(6, -10, 1, 12, gd);
-  rect(-5, -12, 11, 1, outline);
-  rect(-7, -11, 1, 12, outline);
-  rect(7, -11, 1, 12, outline);
-  rect(-4, -14, 2, 2, gd); rect(-4, -14, 2, 1, outline);
-  rect(1, -14, 2, 2, gd); rect(1, -14, 2, 1, outline);
-  rect(-4, -8, 9, 1, outline);
-  set(-3, -7, tooth); set(0, -7, tooth); set(3, -7, tooth);
-  rect(-4, -7, 9, 7, skin);
-  rect(-4, -7, 9, 2, hair);
-  set(-4, -5, hair); set(4, -5, hair);
-  set(-2, -4, eye); set(2, -4, eye);
-  set(-3, -3, blush); set(3, -3, blush);
-  rect(-1, -2, 3, 1, outline);
-  set(0, -1, tooth);
+  const O = "#051003";
 
   if (withSign) {
     const bx = 6, by = -6;
     rect(bx + 2, by + 1, 7, 5, signBg);
-    rect(bx + 2, by, 7, 1, outline);
-    rect(bx + 2, by + 6, 7, 1, outline);
-    rect(bx + 1, by + 1, 1, 5, outline);
-    rect(bx + 9, by + 1, 1, 5, outline);
-    set(bx, by + 5, outline);
+    rect(bx + 2, by, 7, 1, O);
+    rect(bx + 2, by + 6, 7, 1, O);
+    rect(bx + 1, by + 1, 1, 5, O);
+    rect(bx + 9, by + 1, 1, 5, O);
+    set(bx, by + 5, O);
     set(bx + 1, by + 5, signBg);
     set(bx + 4, by + 2, heart); set(bx + 6, by + 2, heart);
     rect(bx + 3, by + 3, 5, 1, heart);
@@ -176,7 +209,6 @@ export function drawJulioFound(ctx: Ctx, cx: number, cy: number, bigPx: number, 
     set(bx + 5, by + 5, heart);
   }
 }
-
 
 export function drawHeartSign(ctx: Ctx, cx: number, cy: number, _t: number): void {
   const s = SPRITE_SCALE;

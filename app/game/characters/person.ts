@@ -1,111 +1,243 @@
 import { PX, type Ctx, pellipse } from "../utils/primitives";
 import { drawSprite, currentFrame, type Palette, type Frame, type SpriteSheet } from "../utils/sprite";
 
-// ── Variant color tables ──────────────────────────────────────────────────────
-const HAIR_COLORS  = ["#1a0e06","#5a3418","#9a5a28","#c89848","#2e2e2e","#a83020"];
-const SHIRT_COLORS = ["#c83028","#2858a8","#f0c030","#289838","#682898","#d86018","#b83880","#187898","#786028","#383848","#c8c8b8","#181818"];
-const SKIN_COLORS  = ["#f8c878","#e8a858","#b87840","#f8e0b0"];
-const PANTS_COLORS = ["#1a2848","#282828","#483018","#101828","#383838","#483018"];
+// ── Color tables ──────────────────────────────────────────────────────────────
+const CAP_COLORS = [
+  "#d42010", // rojo
+  "#1a50c0", // azul
+  "#28a030", // verde
+  "#e8c010", // amarillo
+];
 
-// ── Palette keys ──────────────────────────────────────────────────────────────
-// O = outline (#181818)   H = hair   S = skin   T = shirt   P = pants
-// r = blush (#e87890)     . = transparent
-//
-// Sprite is 16×16. cy = vertical center of sprite (row 8).
-// Feet are at row 14 → cy + 6*scale canvas px below center.
+const HAIR_COLORS = [
+  "#161616", // negro
+  "#5c2e10", // marrón
+  "#c8a040", // rubio
+];
 
-const IDLE: Frame = {
-  width: 16, height: 16,
-  pixels: [
-    "................",  //  0: top padding
-    "....OOOOOOOO....",  //  1: hair outline
-    "....OHHHHHHО....",  //  2: hair
-    "....OHHSSHHО....",  //  3: hair + skin
-    "....OSSSSSSО....",  //  4: forehead
-    "....OSBSSBSО....",  //  5: eyes (B = O key = dark)
-    "....OrSSSSrО....",  //  6: blush cheeks
-    "....OSSBBSSО....",  //  7: mouth
-    "....OOOOOOOO....",  //  8: chin
-    "...OTTTTTTTTTО..",  //  9: shirt (arms wider than head)
-    "...OTSTTTTTsTО..",  // 10: shirt + arm-skin nubs
-    "...OTTTTTTTTTО..",  // 11: shirt bottom
-    "....OPPPPPPО....",  // 12: pants
-    "....OPP..PPО....",  // 13: pants legs
-    "....OOO..OOO....",  // 14: shoes
-    "................",  // 15: bottom padding
-  ],
-};
+const JACKET_COLORS = [
+  "#0e52b0", // azul original
+  "#1a6a1a", // verde oscuro
+  "#8b1a1a", // rojo oscuro/bordó
+  "#2a2a5a", // azul marino
+  "#5a3a8a", // violeta oscuro
+  "#8a5a10", // marrón/mostaza
+  "#1a6a5a", // teal oscuro
+  "#3a3a3a", // gris oscuro
+  "#8a2a5a", // magenta oscuro
+  "#1a4a2a", // verde militar
+];
 
-// Walk frames differ only in rows 12–15: one leg forward (shoe drops to row 15).
-const WALK1: Frame = {
-  width: 16, height: 16,
-  pixels: [
-    "................",
-    "....OOOOOOOO....",
-    "....OHHHHHHО....",
-    "....OHHSSHHО....",
-    "....OSSSSSSО....",
-    "....OSBSSBSО....",
-    "....OrSSSSrО....",
-    "....OSSBBSSО....",
-    "....OOOOOOOO....",
-    "...OTTTTTTTTTО..",
-    "...OTSTTTTTsTО..",
-    "...OTTTTTTTTTО..",
-    "....OPPPPPPО....",
-    "....OPP..PPО....",  // 13: same
-    "....OOO..PPО....",  // 14: left shoe, right still in pants (right leg forward)
-    ".........OOO....",  // 15: right shoe extended forward
-  ],
-};
+// Pieles humanas reales: de muy clara a muy oscura
+const SKIN_TONES: [string, string][] = [ // [base, sombra]
+  ["#fddbb4", "#e8b888"], // muy clara / porcelana
+  ["#f5c9a0", "#d9a070"], // clara
+  ["#e8a878", "#c88050"], // clara-media
+  ["#e08e68", "#be7454"], // media (original)
+  ["#c87848", "#a85830"], // media-oscura / olivácea
+  ["#b06030", "#8a4018"], // morena
+  ["#8a4820", "#6a3010"], // marrón oscura
+  ["#6a3010", "#4a1808"], // oscura
+  ["#4a2008", "#301008"], // muy oscura
+];
 
-const WALK2: Frame = {
-  width: 16, height: 16,
-  pixels: [
-    "................",
-    "....OOOOOOOO....",
-    "....OHHHHHHО....",
-    "....OHHSSHHО....",
-    "....OSSSSSSО....",
-    "....OSBSSBSО....",
-    "....OrSSSSrО....",
-    "....OSSBBSSО....",
-    "....OOOOOOOO....",
-    "...OTTTTTTTTTО..",
-    "...OTSTTTTTsTО..",
-    "...OTTTTTTTTTО..",
-    "....OPPPPPPО....",
-    "....OPP..PPО....",
-    "....PPO..OOO....",  // 14: left still in pants (left leg forward), right shoe
-    "....OOO........."   // 15: left shoe extended forward
-  ],
-};
 
-const PERSON: SpriteSheet = {
-  front: { idle: IDLE, walk: [WALK1, WALK2] },
-};
-
-function makePalette(hair: string, skin: string, shirt: string, pants: string): Palette {
+function makePalette(cap: string, hair: string, skin: string, skinShadow: string, jacket: string): Palette {
   return {
-    "O": "#181818",
-    "H": hair,
+    ".": null,
+    "O": "#161616",
+    "C": cap,
+    "c": "#1a1010",
+    "B": "#eeeef6",
+    "G": "#a8a8c4",
+    "h": hair,
     "S": skin,
-    "T": shirt,
-    "P": pants,
-    "r": "#e87890",
+    "s": skinShadow,
+    "J": jacket,
+    "j": "#0a0a14",
   };
 }
+
+// ── FRONT 32×32 ───────────────────────────────────────────────────────────────
+const FRONT_IDLE: Frame = {
+  width: 32, height: 32,
+  pixels: [
+    "................................",
+    "................................",
+    "..........hhhhhhhhhhhh..........",
+    ".........hhhhhhhhhhhhhh.........",
+    "........hhcCCCCCCCCCCchh........",
+    "........hhCCCCBBBBCCCChh........",
+    ".......hhcCCCCBBBBCCCCchh.......",
+    ".......hccCCCBCCCBBCCCchh.......",
+    ".......OcccCCCCCCCCCcccOO.......",
+    ".....jjOcccccBCccCBccccOOjB.....",
+    ".....jjOcccccBccccBccccOOjj.....",
+    "....OOOshhGcccGGGGccGGhssOOO....",
+    ".....OOSOOJBBBBBBBBBJJOSSOO.....",
+    ".....OOSOOJBBBBBBBBBJJOSSOO.....",
+    "....OjjOhhSJJJJJJJJJSShOOjOO....",
+    ".....jjjSSSSJOJSSJOSSSSOOj......",
+    ".......jSSSSSOSSSSOSSSSjj.......",
+    ".....OOjhhSSShSSSShSSShhjOO.....",
+    ".......OGGOhhSSSSSShOOGOO.......",
+    "......hOGGOhhSSSSSShOOGOOh......",
+    ".....hhSSSGGGOOOOOOGGG.SShh.....",
+    ".....hhSSShJJJJJJJJJJhSSShh.....",
+    "......hSSShJJJJJJJJJJhSSSh......",
+    ".......hOOOGGBBBBBBGOOOhh.......",
+    "..........chhOOOOOOhcc..........",
+    ".........OchhOOOOOOhcc..........",
+    "........OOOSShOOOhhSOOOO........",
+    "........OOGJJOO..OOJGGOO........",
+    ".........OGOJO....OJOOO.........",
+    "..........OOO......OOO..........",
+    "................................",
+    "................................",
+  ],
+};
+
+// ── BACK 32×32 ────────────────────────────────────────────────────────────────
+const BACK_IDLE: Frame = {
+  width: 32, height: 32,
+  pixels: [
+    "................................",
+    "................................",
+    "..........hhhhhhhhhhhh..........",
+    ".........hhhhhhhhhhhhhh.........",
+    ".........hccCCCCCCCCCchh........",
+    ".........hCCCCCCCCCCCChh........",
+    "........hcCCCCCCCCCCCCchh.......",
+    ".......hhcCCCCCCCCCCCCcch.......",
+    ".......hhcccCCCCCCCCCccch.......",
+    "......OhhcccccccccccccccjO......",
+    ".....OOjjcccccccccccccccjOO.....",
+    "....OOjjjhcccccccccccchhjjOO....",
+    ".....OOjjjhccccOOcccchjjjOO.....",
+    ".....OOjjjhhcccOOOccchjjjOO.....",
+    "....OOOjjjjjhhhjjhhhhjjjjOOO....",
+    ".......OjjjjjjjjjjjjjjjjOO......",
+    ".......OOjjjjjjjjjjjjjjOO.......",
+    "......OjjOOOOjjjjjjOOOOOjOO.....",
+    ".......OOGJJJOOOOOOJJJGOO.......",
+    ".......OOGJJJOOOOOOJJJGGOh......",
+    ".....hh..G.JJJJJJJJJJ.GGShh.....",
+    ".....hhSShJJhOOGGGOhJJhSShh.....",
+    "......hShhJJhOOGGGOhhJhhSh......",
+    ".......hhOGGBBBOOOBBBGOOh.......",
+    "........cchhJJJOOOJJJhcc........",
+    ".........chhJJJOOJJJJhcc........",
+    ".........OOOhJJhhJJhhOOO........",
+    ".........OGGJOOOOOOJJGOO........",
+    ".........OOOJOOOOOOJOGO.........",
+    "..........OOO......OOO..........",
+    "................................",
+    "................................",
+  ],
+};
+
+// ── LEFT 32×32 ────────────────────────────────────────────────────────────────
+const LEFT_IDLE: Frame = {
+  width: 32, height: 32,
+  pixels: [
+    "................................",
+    "................................",
+    "..........hhhhhhhhhhh...........",
+    ".........hhhhhhhhhhhhh..........",
+    "........hhcCCCCCCCCCchh.........",
+    ".......hccBCCCCCCCCCChh.........",
+    ".....hhhccBCCCCCCCCCCchh........",
+    ".....hhhccCCCCCCCCCCCcch........",
+    "....OBBhccBCCCCCCCCCccch........",
+    "....OBBcccccccccccccccch........",
+    "....OBBcGGccccccccccccch........",
+    "....OBBGccccccccccccchhOOO......",
+    "....OOOGGGGcccccccchchjOOOO.....",
+    ".....OOGGGGccccccchhhjjjjOO.....",
+    ".......hJJhhhhhhhhjjjjjjOO......",
+    ".......hSSSOOSShjSSSjjjjjOO.....",
+    ".......hSSSOOSSSjSSSjjjjjOO.....",
+    "........hhShhSSSSSSSOjjO........",
+    ".........hhSSSSSShhhjOOjO.......",
+    "..........hSSSSSShhhjOOjO.......",
+    "..........OhhhOOOhhhOOOO........",
+    "..........OJJOJJJOhhBBBO........",
+    "..........OJJOJJJOhhBBOO........",
+    "..........OGGhGGGOhhJJJO........",
+    "..........OOOOSBBOJJJOO.........",
+    "..........OOOOShhOOJJO..........",
+    "...........OOShhhcOOO...........",
+    "...........OOGGJJO..............",
+    "............OOOOOO..............",
+    ".............OOOO...............",
+    "................................",
+    "................................",
+  ],
+};
+
+// ── RIGHT 32×32 ───────────────────────────────────────────────────────────────
+const RIGHT_IDLE: Frame = {
+  width: 32, height: 32,
+  pixels: [
+    "................................",
+    "................................",
+    "..........hhhhhhhhhhh...........",
+    ".........hhhhhhhhhhhhh..........",
+    "........hhcCCCCCCCCCchh.........",
+    "........hhCCCCCCCCCCBcch........",
+    ".......hhcCCCCCCCCCCBcchh.......",
+    ".......hccCCCCCCCCCCCcchhh......",
+    ".......hcccCCCCCCCCCBcchBBO.....",
+    ".......hccccccccccccccccBBO.....",
+    ".......hcccccccccccccGGcBBO.....",
+    ".....OOOhhcccccccccccccGBBO.....",
+    "....OOOOjhccccccccccGGGGOOO.....",
+    "....OOjjjjhhhcccccccGGGGOO......",
+    ".....OOjjjjjjhhhhhhhhJJh........",
+    "....OOjjjjjSSSjhSSOOSSSh........",
+    "....OOjjjjjSSSjSSSOOSSSh........",
+    ".......OjjOSSSSSSShhShh.........",
+    "......OjOOjhhhSSSSSShh..........",
+    "......OjOOjhhhSSSSSSh...........",
+    ".......OOOOhhhOOOhhhO...........",
+    ".......OBBBhhOJJJOJJO...........",
+    ".......OOBBhhOJJJOJJO...........",
+    ".......OJJJhhOGGGhGGO...........",
+    "........OOJJJOSSSOOOO...........",
+    ".........OJJOOhSSOOOO...........",
+    "..........OOOchhhSOO............",
+    "............OOJJGGOO............",
+    ".............OJOOOO.............",
+    "..............OOOO..............",
+    "................................",
+    "................................",
+  ],
+};
+
+// ── Sprite sheet ──────────────────────────────────────────────────────────────
+const PERSON: SpriteSheet = {
+  front: { idle: FRONT_IDLE },
+  back:  { idle: BACK_IDLE  },
+  left:  { idle: LEFT_IDLE  },
+  right: { idle: RIGHT_IDLE },
+};
+
+const DIRECTIONS = ["front", "back", "left", "right"] as const;
+type Direction = typeof DIRECTIONS[number];
+
+const PERSON_SCALE = 2; // 32×32 sprite at 2px/cell = 64×64 canvas px
 
 export function drawPerson(ctx: Ctx, cx: number, cy: number, variant: number, time = 0): void {
   const gcx = cx / PX;
   const gcy = cy / PX;
-  pellipse(ctx, gcx, gcy + 6, 5, 1.5, "#282828");
+  pellipse(ctx, gcx, gcy + 7, 6, 1.5, "#282828");
 
-  const hair  = HAIR_COLORS[variant % HAIR_COLORS.length];
-  const shirt = SHIRT_COLORS[(variant * 7) % SHIRT_COLORS.length];
-  const skin  = SKIN_COLORS[(variant * 3) % SKIN_COLORS.length];
-  const pants = PANTS_COLORS[(variant * 5) % PANTS_COLORS.length];
+  const cap    = CAP_COLORS[variant % CAP_COLORS.length];
+  const hair   = HAIR_COLORS[(variant * 3) % HAIR_COLORS.length];
+  const jacket = JACKET_COLORS[(variant * 7) % JACKET_COLORS.length];
+  const [skin, skinShadow] = SKIN_TONES[(variant * 5) % SKIN_TONES.length];
 
-  const frame = currentFrame(PERSON.front, false, time);
-  drawSprite(ctx, frame, makePalette(hair, skin, shirt, pants), cx, cy, PX);
+  const dir: Direction = DIRECTIONS[variant % DIRECTIONS.length];
+  const frame = currentFrame(PERSON[dir]!, false, time);
+  drawSprite(ctx, frame, makePalette(cap, hair, skin, skinShadow, jacket), cx, cy, PERSON_SCALE);
 }
