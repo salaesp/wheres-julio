@@ -7,6 +7,7 @@ import {
   drawPath, drawSandbox, drawFlowerbed,
   drawSlide, drawSwingSet, drawCarousel, drawSeesaw,
 } from "../characters/sprites";
+import { drawGbaGrass } from "./gbaStyle";
 import type { WorldModule } from "./types";
 
 export const WORLD_WIDTH = 480;
@@ -162,30 +163,7 @@ export function placeCharacters(seed: number, scene: Scene): Placement {
 // ───────── Render functions ─────────
 
 function renderBackground(ctx: CanvasRenderingContext2D, _scene: unknown, _time: number) {
-  // Grass base
-  ctx.fillStyle = "#5aa84a";
-  ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-  ctx.fillStyle = "#4a9438";
-  for (let x = 0; x < WORLD_WIDTH; x += 24) {
-    for (let y = 0; y < WORLD_HEIGHT; y += 24) {
-      if (((x * 31 + y * 17) & 7) === 0) ctx.fillRect(x, y, 3, 3);
-    }
-  }
-  ctx.fillStyle = "#6dc05a";
-  for (let x = 12; x < WORLD_WIDTH; x += 36) {
-    for (let y = 12; y < WORLD_HEIGHT; y += 36) {
-      if (((x * 13 + y * 23) & 7) === 0) ctx.fillRect(x, y, 3, 3);
-    }
-  }
-  const flowerColors = ["#ffe066", "#ff7fa8", "#ffffff"];
-  for (let x = 6; x < WORLD_WIDTH; x += 48) {
-    for (let y = 6; y < WORLD_HEIGHT; y += 48) {
-      if (((x * 41 + y * 19) & 15) === 0) {
-        ctx.fillStyle = flowerColors[((x + y) >>> 0) % flowerColors.length];
-        ctx.fillRect(x, y, 3, 3);
-      }
-    }
-  }
+  drawGbaGrass(ctx, WORLD_WIDTH, WORLD_HEIGHT);
 }
 
 function renderUnder(ctx: CanvasRenderingContext2D, _scene: unknown, _time: number) {

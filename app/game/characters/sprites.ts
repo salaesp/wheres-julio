@@ -87,23 +87,62 @@ export function drawCar(ctx: Ctx, x: number, y: number, w: number, h: number, co
 
 export function drawTreeTrunk(ctx: Ctx, x: number, y: number) {
   const gx = x / PX, gy = y / PX;
-  pcircle(ctx, gx, gy, 3, "rgba(0,0,0,0.35)");
-  pcircle(ctx, gx, gy, 2, "#5a3a1e");
-  pset(ctx, gx - 1, gy - 1, "#7a4a2a");
+  // Trunk sits low under the canopy. GBA trees barely show trunk top-down.
+  pellipse(ctx, gx, gy + 1, 3, 1, "rgba(0,0,0,0.35)");
+  pellipse(ctx, gx, gy, 2, 1, "#5a3a1e");
+  pset(ctx, gx, gy, "#7a4a2a");
 }
 
+// GBA Pokémon-style bushy tree canopy.
+// Built from overlapping circles so the silhouette is lumpy, with a clear
+// dark outline ring, mid-green base, lighter top-left highlight and a few
+// bright top blobs — matches the Hoenn/Kanto outdoor tree look.
 export function drawTreeCanopy(ctx: Ctx, x: number, y: number, r: number) {
   const gx = x / PX, gy = y / PX;
-  const gr = r / PX;
-  pcircle(ctx, gx + 2, gy + 2, gr, "rgba(0,0,0,0.35)");
-  pcircle(ctx, gx, gy, gr, "#2a6a2a");
-  pcircle(ctx, gx - 1, gy - 1, Math.max(2, gr - 2), "#3f9d4a");
-  // highlight blobs
-  pcircle(ctx, gx - Math.round(gr * 0.4), gy - Math.round(gr * 0.4), Math.max(1, Math.round(gr * 0.25)), "#6dc66a");
-  pcircle(ctx, gx + Math.round(gr * 0.3), gy + Math.round(gr * 0.1), Math.max(1, Math.round(gr * 0.18)), "#6dc66a");
-  pcircle(ctx, gx - Math.round(gr * 0.5), gy + Math.round(gr * 0.3), Math.max(1, Math.round(gr * 0.18)), "#6dc66a");
-  // top highlight
-  pcircle(ctx, gx - Math.round(gr * 0.5), gy - Math.round(gr * 0.55), Math.max(1, Math.round(gr * 0.18)), "#a8e070");
+  const gr = Math.max(3, r / PX);
+  const OUTLINE = "#163a16";
+  const DARK = "#2a6a2a";
+  const MID = "#3f9d4a";
+  const LIGHT = "#7adf6a";
+  const HIGH = "#b8ec88";
+
+  // Drop shadow
+  pcircle(ctx, gx + 2, gy + 3, gr, "rgba(0,0,0,0.32)");
+
+  // Lumpy silhouette — central blob + 5 bumps around the edge.
+  // Each bump is a small circle whose center sits on the canopy edge,
+  // giving the GBA "cloud-cluster" look.
+  const bumps: [number, number, number][] = [
+    [0, 0, gr],                                             // main
+    [-gr * 0.7, -gr * 0.3, gr * 0.55],                      // left bump
+    [ gr * 0.7, -gr * 0.3, gr * 0.55],                      // right bump
+    [-gr * 0.35, -gr * 0.75, gr * 0.55],                    // top-left bump
+    [ gr * 0.35, -gr * 0.75, gr * 0.55],                    // top-right bump
+    [-gr * 0.35,  gr * 0.7,  gr * 0.5],                     // bottom-left bump
+    [ gr * 0.4,   gr * 0.7,  gr * 0.5],                     // bottom-right bump
+  ];
+
+  // Pass 1: dark outline (slightly larger) — gives every bump a ring.
+  for (const [dx, dy, br] of bumps) {
+    pcircle(ctx, gx + dx, gy + dy, br + 1, OUTLINE);
+  }
+  // Pass 2: dark fill
+  for (const [dx, dy, br] of bumps) {
+    pcircle(ctx, gx + dx, gy + dy, br, DARK);
+  }
+  // Pass 3: mid green inset (the bushy body)
+  for (const [dx, dy, br] of bumps) {
+    pcircle(ctx, gx + dx, gy + dy - 1, Math.max(1, br - 1), MID);
+  }
+  // Pass 4: light highlight blobs on top-left of each bump
+  for (const [dx, dy, br] of bumps) {
+    const hr = Math.max(1, Math.round(br * 0.45));
+    pcircle(ctx, gx + dx - Math.round(br * 0.25), gy + dy - Math.round(br * 0.35), hr, LIGHT);
+  }
+  // Pass 5: small bright "sparkle" highlights — gives the painted top-light feel
+  pcircle(ctx, gx - Math.round(gr * 0.45), gy - Math.round(gr * 0.6), Math.max(1, Math.round(gr * 0.22)), HIGH);
+  pcircle(ctx, gx + Math.round(gr * 0.15), gy - Math.round(gr * 0.7), Math.max(1, Math.round(gr * 0.14)), HIGH);
+  pcircle(ctx, gx - Math.round(gr * 0.05), gy - Math.round(gr * 0.25), Math.max(1, Math.round(gr * 0.12)), HIGH);
 }
 
 export function drawBench(ctx: Ctx, x: number, y: number, w: number) {
@@ -119,16 +158,42 @@ export function drawBench(ctx: Ctx, x: number, y: number, w: number) {
   prect(ctx, gx + gw - 2, gy + 5, 1, 1, "#3a3a3a");
 }
 
+// GBA-style hedge — bumpy rounded top (looks like a row of bushes) with
+// dark outline, darker base and bright top highlights. The bump pattern
+// matches the canopy style for visual consistency.
 export function drawHedge(ctx: Ctx, x: number, y: number, w: number, h: number) {
   const gx = x / PX, gy = y / PX, gw = w / PX, gh = h / PX;
-  prect(ctx, gx + 1, gy + 1, gw, gh, "rgba(0,0,0,0.3)");
-  prect(ctx, gx, gy, gw, gh, "#2a6a2a");
+  const OUTLINE = "#163a16";
+  const DARK = "#2a6a2a";
+  const MID = "#3f9d4a";
+  const LIGHT = "#7adf6a";
+  const HIGH = "#b8ec88";
+
+  // shadow under hedge
+  prect(ctx, gx + 1, gy + gh, gw, 1, "rgba(0,0,0,0.35)");
+  // body
+  prect(ctx, gx, gy + 1, gw, gh - 1, DARK);
+  // bumpy top — alternating tall/short rounded bumps
+  for (let xx = gx; xx < gx + gw; xx += 3) {
+    pcircle(ctx, xx + 1, gy + 1, 2, DARK);
+    pcircle(ctx, xx + 1, gy + 1, 1, MID);
+  }
+  // mid-tone inset along the body
+  prect(ctx, gx + 1, gy + 2, gw - 2, Math.max(1, gh - 3), MID);
+  // light tufts scattered along top
   for (let xx = gx + 1; xx < gx + gw - 1; xx += 3) {
-    pcircle(ctx, xx, gy + 1, 2, "#3f9d4a");
+    pset(ctx, xx, gy + 1, LIGHT);
+    if (((xx * 11) & 3) === 0) pset(ctx, xx + 1, gy, HIGH);
   }
-  for (let xx = gx + 2; xx < gx + gw - 1; xx += 4) {
-    pset(ctx, xx, gy + 1, "#6dc66a");
+  // outline ring (top bumps + sides + bottom)
+  for (let xx = gx; xx < gx + gw; xx++) {
+    // top outline follows bump silhouette: every 3px ring goes one px higher
+    const above = (((xx - gx) % 3) === 1) ? -1 : 0;
+    pset(ctx, xx, gy + above, OUTLINE);
   }
+  prect(ctx, gx, gy + gh - 1, gw, 1, OUTLINE);
+  prect(ctx, gx - 1, gy + 1, 1, gh - 1, OUTLINE);
+  prect(ctx, gx + gw, gy + 1, 1, gh - 1, OUTLINE);
 }
 
 export function drawFountain(ctx: Ctx, x: number, y: number, r: number) {
@@ -170,19 +235,27 @@ export function drawCrosswalk(ctx: Ctx, x: number, y: number, w: number, h: numb
 
 // ───────────── Playground props ─────────────
 
+// GBA route path — light sandy tone with a soft darker edge and small
+// pebble speckles. Avoids a hard outline so it blends into grass like a
+// real Pokémon route tile.
 export function drawPath(ctx: Ctx, x: number, y: number, w: number, h: number) {
   const gx = x / PX, gy = y / PX, gw = w / PX, gh = h / PX;
-  prect(ctx, gx, gy, gw, gh, "#d4b88a");
-  // edge
-  prect(ctx, gx, gy, gw, 1, "#a8946a");
-  prect(ctx, gx, gy + gh - 1, gw, 1, "#a8946a");
-  prect(ctx, gx, gy, 1, gh, "#a8946a");
-  prect(ctx, gx + gw - 1, gy, 1, gh, "#a8946a");
-  // pebble speckle
-  for (let yy = gy + 2; yy < gy + gh - 2; yy += 4) {
-    for (let xx = gx + 2; xx < gx + gw - 2; xx += 4) {
-      if (((xx * 31 + yy * 17) & 3) === 0) pset(ctx, xx, yy, "#b89a6a");
-      if (((xx * 13 + yy * 23) & 5) === 0) pset(ctx, xx + 1, yy + 1, "#e8d4a8");
+  const BASE = "#e3cfa1";
+  const EDGE = "#b39866";
+  const SPEC = "#c9b27a";
+  const HI = "#f1dfb6";
+  prect(ctx, gx, gy, gw, gh, BASE);
+  // soft inner edge band
+  prect(ctx, gx, gy, gw, 1, EDGE);
+  prect(ctx, gx, gy + gh - 1, gw, 1, EDGE);
+  prect(ctx, gx, gy, 1, gh, EDGE);
+  prect(ctx, gx + gw - 1, gy, 1, gh, EDGE);
+  // pebble + highlight speckle
+  for (let yy = gy + 2; yy < gy + gh - 2; yy += 3) {
+    for (let xx = gx + 2; xx < gx + gw - 2; xx += 3) {
+      const k = (xx * 31 + yy * 17) >>> 0;
+      if ((k & 5) === 0) pset(ctx, xx, yy, SPEC);
+      if ((k & 9) === 0) pset(ctx, xx + 1, yy + 1, HI);
     }
   }
 }
@@ -214,22 +287,64 @@ export function drawSandbox(ctx: Ctx, x: number, y: number, w: number, h: number
   prect(ctx, gx + gw - 1, gy, 1, gh, "#1a1a1a");
 }
 
+// GBA Pokémon-style flower bed — a green leafy patch dotted with red
+// rose-bush triplet flowers (3 small petals in a triangle), the iconic
+// look of Petalburg/Route flower clumps in Ruby/Sapphire/Emerald.
 export function drawFlowerbed(ctx: Ctx, x: number, y: number, w: number, h: number) {
   const gx = x / PX, gy = y / PX, gw = w / PX, gh = h / PX;
-  // dirt
-  prect(ctx, gx, gy, gw, gh, "#5a3a22");
-  prect(ctx, gx, gy, gw, 1, "#3a2a14");
-  // flowers
-  const colors = ["#e83a78", "#f0c842", "#e8853a", "#a85ad4", "#ffffff"];
-  for (let yy = gy + 2; yy < gy + gh - 1; yy += 4) {
-    for (let xx = gx + 2; xx < gx + gw - 1; xx += 4) {
-      const c = colors[((xx * 7 + yy * 11) >>> 0) % colors.length];
-      pset(ctx, xx, yy, c);
-      pset(ctx, xx - 1, yy, c);
-      pset(ctx, xx + 1, yy, c);
-      pset(ctx, xx, yy - 1, c);
-      pset(ctx, xx, yy + 1, c);
-      pset(ctx, xx, yy, "#f5e23a"); // yellow center
+  const LEAF = "#3f9d4a";
+  const LEAF_DARK = "#2a6a2a";
+  const LEAF_LIGHT = "#7adf6a";
+  const OUTLINE = "#163a16";
+  const ROSE = "#e23a4a";
+  const ROSE_DARK = "#a82838";
+  const ROSE_LIGHT = "#ff7a6a";
+  const YELLOW = "#f4d24a";
+  const PINK = "#f48ab2";
+  const WHITE = "#ffffff";
+
+  // Leafy bed base — bumpy outline like the hedge
+  prect(ctx, gx, gy + 1, gw, gh - 1, LEAF_DARK);
+  prect(ctx, gx + 1, gy + 2, gw - 2, gh - 3, LEAF);
+  // Lighter speckles for leaf texture
+  for (let yy = gy + 2; yy < gy + gh - 1; yy += 2) {
+    for (let xx = gx + 1; xx < gx + gw - 1; xx += 2) {
+      const k = (xx * 7 + yy * 11) >>> 0;
+      if ((k & 3) === 0) pset(ctx, xx, yy, LEAF_LIGHT);
+    }
+  }
+  // bumpy top outline
+  for (let xx = gx; xx < gx + gw; xx++) {
+    const above = (((xx - gx) % 3) === 1) ? -1 : 0;
+    pset(ctx, xx, gy + above, OUTLINE);
+  }
+  prect(ctx, gx, gy + gh - 1, gw, 1, OUTLINE);
+  prect(ctx, gx - 1, gy + 1, 1, gh - 1, OUTLINE);
+  prect(ctx, gx + gw, gy + 1, 1, gh - 1, OUTLINE);
+
+  // Flowers — 3-petal rose clusters scattered across the bed.
+  const accent = [ROSE, YELLOW, PINK, WHITE];
+  for (let yy = gy + 3; yy < gy + gh - 2; yy += 5) {
+    for (let xx = gx + 3; xx < gx + gw - 2; xx += 5) {
+      const k = (xx * 31 + yy * 17) >>> 0;
+      const col = accent[k % accent.length];
+      const dark =
+        col === ROSE ? ROSE_DARK :
+        col === YELLOW ? "#b8902a" :
+        col === PINK ? "#b8527a" : "#b8b8b8";
+      const light =
+        col === ROSE ? ROSE_LIGHT :
+        col === YELLOW ? "#fff086" :
+        col === PINK ? "#ffc0d4" : WHITE;
+      // 3-petal cluster (triangle)
+      pset(ctx, xx, yy - 1, col);
+      pset(ctx, xx - 1, yy, col);
+      pset(ctx, xx + 1, yy, col);
+      // shading
+      pset(ctx, xx - 1, yy - 1, dark);
+      pset(ctx, xx + 1, yy + 1, dark);
+      // highlight
+      pset(ctx, xx, yy, light);
     }
   }
 }

@@ -11,71 +11,114 @@ const SKIN_COLORS = ["#f3c79a", "#d99a6a", "#a86a3a", "#f8d8b0"];
 const PANTS_COLORS = ["#2a3a5a", "#3a3a3a", "#5a3a2a", "#1a2540", "#4a4a4a", "#6a4a2a"];
 const SHOE_COLOR = "#1a1a1a";
 
+// GBA-style chibi NPC: big round head with full dark outline, two-tone
+// shirt with side shading, and small legs. Matches the proportions of
+// Pokémon Ruby/Sapphire/Emerald overworld trainers.
 export function drawPerson(ctx: Ctx, cx: number, cy: number, variant: number) {
   const gcx = cx / PX;
   const gcy = cy / PX;
   const hair = HAIR_COLORS[variant % HAIR_COLORS.length];
   const shirt = SHIRT_COLORS[(variant * 7) % SHIRT_COLORS.length];
-  const shirtDark = "#000";
+  const OUTLINE = "#1a1a1a";
   const skin = SKIN_COLORS[(variant * 3) % SKIN_COLORS.length];
+  const skinShade = "#c8895a";
   const pants = PANTS_COLORS[(variant * 5) % PANTS_COLORS.length];
 
+  // soft shadow
   pellipse(ctx, gcx, gcy + 9, 6, 2, "rgba(0,0,0,0.32)");
 
+  // ── Legs / pants (short — chibi)
   prect(ctx, gcx - 3, gcy + 4, 2, 4, pants);
-  prect(ctx, gcx - 3, gcy + 4, 1, 4, "rgba(0,0,0,0.25)");
   prect(ctx, gcx + 1, gcy + 4, 2, 4, pants);
-  prect(ctx, gcx + 2, gcy + 4, 1, 4, "rgba(0,0,0,0.18)");
+  // pants outline + crease
+  prect(ctx, gcx - 3, gcy + 4, 1, 4, OUTLINE);
+  prect(ctx, gcx + 2, gcy + 4, 1, 4, OUTLINE);
+  pset(ctx, gcx, gcy + 4, OUTLINE);
+  pset(ctx, gcx, gcy + 7, OUTLINE);
+  // shoes
   prect(ctx, gcx - 3, gcy + 8, 2, 1, SHOE_COLOR);
   prect(ctx, gcx + 1, gcy + 8, 2, 1, SHOE_COLOR);
 
-  prect(ctx, gcx - 4, gcy - 2, 8, 5, shirt);
-  prect(ctx, gcx - 4, gcy - 2, 8, 1, shirtDark);
-  prect(ctx, gcx - 4, gcy + 2, 8, 1, "rgba(0,0,0,0.3)");
-  prect(ctx, gcx - 4, gcy - 2, 1, 5, shirtDark);
-  prect(ctx, gcx + 3, gcy - 2, 1, 5, shirtDark);
-  prect(ctx, gcx - 1, gcy - 2, 2, 1, skin);
+  // ── Torso (shirt) — outlined block
+  prect(ctx, gcx - 3, gcy, 7, 4, shirt);
+  // side shading (right side darker)
+  prect(ctx, gcx + 3, gcy, 1, 4, "rgba(0,0,0,0.35)");
+  // outline
+  prect(ctx, gcx - 3, gcy - 1, 7, 1, OUTLINE);
+  prect(ctx, gcx - 3, gcy + 4, 7, 1, OUTLINE);
+  prect(ctx, gcx - 4, gcy, 1, 4, OUTLINE);
+  prect(ctx, gcx + 4, gcy, 1, 4, OUTLINE);
 
-  prect(ctx, gcx - 5, gcy - 1, 1, 4, shirt);
-  prect(ctx, gcx + 4, gcy - 1, 1, 4, shirt);
-  pset(ctx, gcx - 5, gcy - 1, shirtDark);
-  pset(ctx, gcx - 5, gcy + 2, shirtDark);
-  pset(ctx, gcx + 4, gcy - 1, shirtDark);
-  pset(ctx, gcx + 4, gcy + 2, shirtDark);
-  pset(ctx, gcx - 5, gcy + 3, skin);
-  pset(ctx, gcx + 4, gcy + 3, skin);
+  // ── Arms (peeking out at sides)
+  prect(ctx, gcx - 4, gcy + 1, 1, 2, skin);
+  prect(ctx, gcx + 4, gcy + 1, 1, 2, skin);
+  pset(ctx, gcx - 5, gcy + 1, OUTLINE);
+  pset(ctx, gcx - 5, gcy + 2, OUTLINE);
+  pset(ctx, gcx + 5, gcy + 1, OUTLINE);
+  pset(ctx, gcx + 5, gcy + 2, OUTLINE);
 
-  pcircle(ctx, gcx, gcy - 5, 3, hair);
-  pcircle(ctx, gcx, gcy - 4, 2, skin);
-  pset(ctx, gcx - 3, gcy - 4, "#000");
-  pset(ctx, gcx + 2, gcy - 4, "#000");
-  pset(ctx, gcx, gcy - 7, "#000");
-  pset(ctx, gcx - 1, gcy - 4, "#1a1a1a");
-  pset(ctx, gcx + 1, gcy - 4, "#1a1a1a");
+  // ── HEAD — big round chibi (GBA proportions ~50% of sprite height)
+  // hair backing (full skull)
+  pcircle(ctx, gcx, gcy - 4, 4, hair);
+  // face
+  pcircle(ctx, gcx, gcy - 3, 3, skin);
+  // face shade right
+  pset(ctx, gcx + 2, gcy - 2, skinShade);
+  pset(ctx, gcx + 2, gcy - 3, skinShade);
+  // hair fringe overlap
+  prect(ctx, gcx - 3, gcy - 6, 7, 2, hair);
+  pset(ctx, gcx - 3, gcy - 4, hair);
+  pset(ctx, gcx + 3, gcy - 4, hair);
+  // eyes — bigger, more readable
+  pset(ctx, gcx - 1, gcy - 3, OUTLINE);
+  pset(ctx, gcx + 1, gcy - 3, OUTLINE);
+  // tiny mouth
+  pset(ctx, gcx, gcy - 1, OUTLINE);
+  // head outline
+  pset(ctx, gcx - 4, gcy - 4, OUTLINE);
+  pset(ctx, gcx + 4, gcy - 4, OUTLINE);
+  pset(ctx, gcx - 4, gcy - 3, OUTLINE);
+  pset(ctx, gcx + 4, gcy - 3, OUTLINE);
+  pset(ctx, gcx - 3, gcy - 2, OUTLINE);
+  pset(ctx, gcx + 3, gcy - 2, OUTLINE);
+  pset(ctx, gcx - 3, gcy - 7, OUTLINE);
+  pset(ctx, gcx + 3, gcy - 7, OUTLINE);
+  prect(ctx, gcx - 2, gcy - 8, 5, 1, OUTLINE);
+  // neck join
+  prect(ctx, gcx - 1, gcy - 1, 3, 1, skin);
+  pset(ctx, gcx - 2, gcy - 1, OUTLINE);
+  pset(ctx, gcx + 2, gcy - 1, OUTLINE);
 
-  if (variant % 3 === 0) {
-    prect(ctx, gcx - 2, gcy - 6, 4, 1, hair);
-    pset(ctx, gcx, gcy - 7, hair);
-  }
-
+  // ── Variant accessories ──
   if (variant % 4 === 1) {
+    // Pokémon trainer cap (red with white front)
     const cap = SHIRT_COLORS[(variant + 2) % SHIRT_COLORS.length];
-    pcircle(ctx, gcx, gcy - 6, 3, cap);
-    pset(ctx, gcx + 3, gcy - 5, cap);
-    pset(ctx, gcx + 4, gcy - 5, cap);
+    prect(ctx, gcx - 3, gcy - 8, 7, 2, cap);
+    prect(ctx, gcx - 4, gcy - 7, 1, 1, cap);
+    prect(ctx, gcx + 4, gcy - 7, 1, 1, cap);
+    // brim
+    prect(ctx, gcx - 4, gcy - 6, 9, 1, OUTLINE);
+    // white front patch
+    prect(ctx, gcx - 1, gcy - 7, 3, 1, "#ffffff");
   } else if (variant % 5 === 2) {
-    pcircle(ctx, gcx, gcy - 6, 3, "#2a2a2a");
-    pset(ctx, gcx, gcy - 8, "#c83a3a");
+    // bandana (dark, with red dot)
+    prect(ctx, gcx - 3, gcy - 7, 7, 2, "#2a2a2a");
+    pset(ctx, gcx, gcy - 9, "#c83a3a");
+    pset(ctx, gcx - 1, gcy - 9, "#c83a3a");
   } else if (variant % 7 === 3) {
-    prect(ctx, gcx - 3, gcy - 3, 7, 2, hair);
-    pset(ctx, gcx - 4, gcy - 2, hair);
-    pset(ctx, gcx + 3, gcy - 2, hair);
+    // long hair / ponytail tuft
+    prect(ctx, gcx - 4, gcy - 2, 9, 2, hair);
+    pset(ctx, gcx - 5, gcy - 1, hair);
+    pset(ctx, gcx + 5, gcy - 1, hair);
   }
 
   if (variant % 6 === 4) {
+    // backpack — visible strap across shoulders
     const pack = SHIRT_COLORS[(variant + 5) % SHIRT_COLORS.length];
-    prect(ctx, gcx - 3, gcy - 1, 6, 3, pack);
-    prect(ctx, gcx - 3, gcy - 1, 6, 1, "rgba(0,0,0,0.4)");
+    prect(ctx, gcx - 4, gcy, 1, 4, pack);
+    prect(ctx, gcx + 4, gcy, 1, 4, pack);
+    pset(ctx, gcx - 4, gcy, OUTLINE);
+    pset(ctx, gcx + 4, gcy, OUTLINE);
   }
 }
 

@@ -121,34 +121,47 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
       drawCloud(ctx, ((w * 0.55 - drift + w + cloudW) % (w + cloudW)) - cloudW, h * 0.18, cloudPx);
       drawCloud(ctx, ((w * 0.85 - drift + w + cloudW) % (w + cloudW)) - cloudW, h * 0.05, cloudPx);
 
-      // ── Ground: grass strip ──
+      // ── Ground: GBA-style grass strip ──
       const groundY = h * 0.65;
-      ctx.fillStyle = "#5aa84a";
+      ctx.fillStyle = "#6dc25a";
       ctx.fillRect(0, groundY, w, h - groundY);
-      // grass top edge (lighter line)
-      ctx.fillStyle = "#7ac86a";
+      // bright top edge (sun-lit horizon)
+      ctx.fillStyle = "#92dc7a";
       ctx.fillRect(0, groundY, w, Math.max(3, Math.floor(h / 200)));
-      // grass speckle pixels
-      ctx.fillStyle = "#4a9438";
       const sp = Math.max(2, Math.floor(w / 160));
-      for (let x = 0; x < w; x += sp * 4) {
+      // GBA "tuft" clusters (2-pixel dark green clumps)
+      ctx.fillStyle = "#3a7a32";
+      for (let x = 0; x < w; x += sp * 5) {
         for (let y = groundY + sp * 2; y < h; y += sp * 5) {
-          if (((x * 31 + y * 17) & 3) === 0) ctx.fillRect(x, y, sp, sp);
+          if (((x * 31 + y * 17) & 5) === 0) {
+            ctx.fillRect(x, y, sp * 2, sp);
+            ctx.fillRect(x + sp, y + sp, sp, sp);
+          }
         }
       }
-      ctx.fillStyle = "#6dc05a";
-      for (let x = sp * 2; x < w; x += sp * 5) {
-        for (let y = groundY + sp * 3; y < h; y += sp * 6) {
-          if (((x * 13 + y * 23) & 3) === 0) ctx.fillRect(x, y, sp, sp);
+      // mid-tone speckle
+      ctx.fillStyle = "#58a548";
+      for (let x = sp * 2; x < w; x += sp * 4) {
+        for (let y = groundY + sp * 3; y < h; y += sp * 5) {
+          if (((x * 13 + y * 23) & 7) === 0) ctx.fillRect(x, y, sp, sp);
         }
       }
-      // tiny flower pixels
-      const flowerColors = ["#ffe066", "#ff7fa8", "#ffffff"];
-      for (let x = sp; x < w; x += sp * 9) {
-        for (let y = groundY + sp * 4; y < h; y += sp * 8) {
+      // light highlight tufts
+      ctx.fillStyle = "#a8e878";
+      for (let x = sp * 3; x < w; x += sp * 7) {
+        for (let y = groundY + sp * 4; y < h; y += sp * 7) {
+          if (((x * 19 + y * 29) & 7) === 0) ctx.fillRect(x, y, sp, sp);
+        }
+      }
+      // tiny rose-bush flowers
+      const flowerColors = ["#e23a4a", "#f4d24a", "#ffffff"];
+      for (let x = sp; x < w; x += sp * 11) {
+        for (let y = groundY + sp * 5; y < h; y += sp * 9) {
           if (((x * 41 + y * 19) & 7) === 0) {
             ctx.fillStyle = flowerColors[((x + y) >>> 0) % flowerColors.length];
             ctx.fillRect(x, y, sp, sp);
+            ctx.fillRect(x - sp, y + sp, sp, sp);
+            ctx.fillRect(x + sp, y + sp, sp, sp);
           }
         }
       }

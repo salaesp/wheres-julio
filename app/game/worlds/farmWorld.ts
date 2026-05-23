@@ -6,6 +6,7 @@ import {
   drawTractor, drawHayBale, drawCropRow, drawPond,
   drawWindmill, drawScarecrow,
 } from "../characters/sprites";
+import { drawGbaGrass } from "./gbaStyle";
 import type { NpcPos, Placement, WorldModule } from "./types";
 
 export const WIDTH = 480;
@@ -172,38 +173,35 @@ function placeCharacters(seed: number, _scene: unknown): Placement {
 
 function renderBackground(ctx: CanvasRenderingContext2D, _scene: unknown, _time: number) {
   const scene = _scene as FarmScene;
-  // grass
-  ctx.fillStyle = "#7ac86a";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  ctx.fillStyle = "#5aa84a";
-  for (let x = 0; x < WIDTH; x += 18) {
-    for (let y = 0; y < HEIGHT; y += 18) {
-      if (((x * 31 + y * 17) & 7) === 0) ctx.fillRect(x, y, 3, 3);
-    }
-  }
-  ctx.fillStyle = "#9adc7a";
-  for (let x = 9; x < WIDTH; x += 24) {
-    for (let y = 9; y < HEIGHT; y += 24) {
-      if (((x * 13 + y * 23) & 7) === 0) ctx.fillRect(x, y, 2, 2);
-    }
-  }
-  // tiny dandelions
-  ctx.fillStyle = "#f5e23a";
+  // GBA grass — slightly lighter to fit a sunny farm.
+  drawGbaGrass(ctx, WIDTH, HEIGHT, {
+    base: "#7fcd5f",
+    mid: "#5fb348",
+    dark: "#3a7a32",
+    light: "#a8e078",
+    tuft: "#4a9438",
+  });
+  // tiny dandelions on top of grass
+  ctx.fillStyle = "#f4d24a";
   for (let x = 5; x < WIDTH; x += 35) {
     for (let y = 5; y < HEIGHT; y += 35) {
       if (((x * 41 + y * 19) & 15) === 0) ctx.fillRect(x, y, 2, 2);
     }
   }
-  // Dirt paths
+  // Dirt paths (farm tone)
   for (const p of scene.paths) {
     ctx.fillStyle = "#a87a4a";
     ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = "#7a4a22";
+    ctx.fillStyle = "#8a5a2a";
     for (let yy = p.y + 2; yy < p.y + p.h - 2; yy += 4) {
       for (let xx = p.x + 2; xx < p.x + p.w - 2; xx += 4) {
         if (((xx * 7 + yy * 11) & 3) === 0) ctx.fillRect(xx, yy, 2, 2);
       }
     }
+    // soft inner edge
+    ctx.fillStyle = "#7a5530";
+    ctx.fillRect(p.x, p.y, p.w, 1);
+    ctx.fillRect(p.x, p.y + p.h - 1, p.w, 1);
   }
 }
 
