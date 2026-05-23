@@ -21,57 +21,133 @@
   touch-action: none;
 }
 .hud {
+  --accent: #ffe66d;
   flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 10px clamp(10px, 3vw, 18px);
-  background: linear-gradient(180deg, #0b0f24 0%, #1a1f3a 100%);
-  border-bottom: 2px solid #ffe66d;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  gap: clamp(10px, 2vw, 20px);
+  padding: clamp(8px, 1.6vw, 14px) clamp(12px, 3vw, 22px) clamp(14px, 2vw, 18px);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(255, 255, 255, 0.025) 2px 3px),
+    #0b0f24;
   z-index: 5;
-  font-family: ui-monospace, monospace;
-  min-height: clamp(56px, 9vh, 80px);
+  font-family: "VT323", "Courier New", monospace;
+  min-height: clamp(60px, 9vh, 84px);
   box-sizing: border-box;
+  position: relative;
+  image-rendering: pixelated;
 }
-.title {
-  font-size: clamp(15px, 3.5vw, 22px);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #ffe66d;
-  line-height: 1.1;
+/* Pixel-art saw-tooth divider — replaces the flat yellow border-bottom. */
+.hud::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  background:
+    linear-gradient(180deg, transparent 0 2px, var(--accent) 2px 4px, #0b0f24 4px 6px);
+  pointer-events: none;
+}
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1vw, 8px);
   min-width: 0;
+  flex: 1 1 auto;
 }
-.title small {
-  display: block;
-  font-size: clamp(10px, 2.2vw, 12px);
-  color: #fff;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  opacity: 0.85;
+.levelName {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: clamp(13px, 2.8vw, 20px);
+  color: var(--accent);
+  text-shadow: 2px 2px 0 #000, 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  animation: levelIn 0.6s steps(6, end);
+}
+.worldDots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.dot {
+  width: clamp(8px, 1.6vw, 11px);
+  height: clamp(8px, 1.6vw, 11px);
+  background: transparent;
+  box-shadow: inset 0 0 0 2px rgba(255, 230, 109, 0.35);
+}
+.dotDone {
+  background: #ffe66d;
+  box-shadow: inset 0 0 0 2px #ffe66d, 0 0 6px rgba(255, 230, 109, 0.4);
+}
+.dotCurrent {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent), 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+  animation: dotBlink 1s steps(2, end) infinite;
 }
 .stats {
   display: flex;
-  gap: clamp(6px, 1.5vw, 18px);
+  gap: clamp(10px, 2.5vw, 22px);
   align-items: center;
   flex-shrink: 0;
 }
-.box {
-  background: rgba(0, 0, 0, 0.55);
-  border: 2px solid #ffe66d;
-  border-radius: 10px;
-  padding: clamp(4px, 1vw, 8px) clamp(8px, 1.6vw, 12px);
-  color: #fff;
-  font-size: clamp(11px, 2.4vw, 14px);
-  white-space: nowrap;
+.statGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4px, 1vw, 6px);
 }
+.statLabel {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: clamp(7px, 1.2vw, 9px);
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.findsRow,
 .lupas {
   display: flex;
-  gap: 4px;
-  font-size: clamp(13px, 2.8vw, 18px);
+  gap: clamp(4px, 0.8vw, 6px);
+  align-items: center;
 }
-.lupaUsed { opacity: 0.3; text-decoration: line-through; }
+.iconSlot {
+  width: clamp(18px, 3.4vw, 24px);
+  height: clamp(18px, 3.4vw, 24px);
+  display: block;
+}
+.iconSlot svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  shape-rendering: crispEdges;
+  image-rendering: pixelated;
+}
+.findPop {
+  animation: findPop 0.5s steps(4, end);
+}
+.lupaUsed { opacity: 0.2; }
+.lupaDanger { animation: dangerBlink 0.5s steps(2, end) infinite; }
+@keyframes dotBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.5; }
+}
+@keyframes findPop {
+  0% { transform: scale(0.4); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+@keyframes dangerBlink {
+  0%, 49% { filter: none; }
+  50%, 100% { filter: drop-shadow(0 0 4px #ff3a3a) brightness(1.3); }
+}
+@keyframes levelIn {
+  0% { transform: translateY(-6px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
 .minimap {
   position: absolute;
   left: 50%;

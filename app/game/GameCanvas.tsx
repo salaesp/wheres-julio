@@ -6,6 +6,8 @@ import {
   drawPerson, drawJulio, drawJulioFound,
   SPRITE_SIZE,
 } from "./characters/sprites";
+import { getAccent } from "./worlds/accents";
+import { JulioHeadIcon, MagnifierIcon } from "./HudIcons";
 
 const HIT_RADIUS = SPRITE_SIZE * 0.4;
 
@@ -276,24 +278,57 @@ export default function GameCanvas() {
 
   const onPointerDown = (e: React.PointerEvent) => handleClick(e.clientX, e.clientY);
 
-  const lupas = Array.from({ length: 5 }, (_, i) => i < state.wrongClicks);
+  const lupasUsed = state.wrongClicks;
+  const accent = getAccent(state.world);
+  const dangerStart = 3;
 
   return (
     <div className={styles.root} ref={rootRef}>
-      <div className={styles.hud}>
-        <div className={styles.title}>
-          ¿Dónde está Julio?
-          <small>Mundo {state.step + 1}/{state.total} · {state.worldModule.title}</small>
+      <div className={styles.hud} style={{ "--accent": accent } as React.CSSProperties}>
+        <div className={styles.titleBlock}>
+          <div className={styles.levelName} key={state.world}>
+            {state.worldModule.title.toUpperCase()}
+          </div>
+          <div className={styles.worldDots} aria-label={`Mundo ${state.step + 1} de ${state.total}`}>
+            {Array.from({ length: state.total }, (_, i) => {
+              const cls =
+                i < state.step ? styles.dotDone :
+                i === state.step ? styles.dotCurrent : "";
+              return <div key={i} className={`${styles.dot} ${cls}`} />;
+            })}
+          </div>
         </div>
         <div className={styles.stats}>
-          <div className={styles.box}>
-            Encuentros: <strong>{state.finds}</strong> / 3
+          <div className={styles.statGroup}>
+            <div className={styles.statLabel}>Encuentros</div>
+            <div className={styles.findsRow} aria-label={`${state.finds} de 3 encuentros`}>
+              {Array.from({ length: 3 }, (_, i) => {
+                const found = i < state.finds;
+                const popping = i === state.finds - 1 && state.phase === "found_anim";
+                return (
+                  <div key={i} className={`${styles.iconSlot} ${popping ? styles.findPop : ""}`}>
+                    <JulioHeadIcon found={found} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className={styles.box}>
-            <div className={styles.lupas} aria-label="Intentos restantes">
-              {lupas.map((used, i) => (
-                <span key={i} className={used ? styles.lupaUsed : undefined}>🔍</span>
-              ))}
+          <div className={styles.statGroup}>
+            <div className={styles.statLabel}>Intentos</div>
+            <div className={styles.lupas} aria-label={`${5 - lupasUsed} intentos restantes`}>
+              {Array.from({ length: 5 }, (_, i) => {
+                const used = i < lupasUsed;
+                const remaining = 5 - lupasUsed;
+                const danger = !used && remaining <= 2 && lupasUsed >= dangerStart;
+                return (
+                  <div
+                    key={i}
+                    className={`${styles.iconSlot} ${used ? styles.lupaUsed : ""} ${danger ? styles.lupaDanger : ""}`}
+                  >
+                    <MagnifierIcon used={used} danger={danger} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
