@@ -69,25 +69,33 @@
   text-overflow: clip;
   animation: levelIn 0.6s steps(6, end);
 }
-.worldDots {
+.worldProgress {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
 }
-.dot {
-  width: clamp(8px, 1.6vw, 11px);
-  height: clamp(8px, 1.6vw, 11px);
-  background: transparent;
-  box-shadow: inset 0 0 0 2px rgba(255, 230, 109, 0.35);
+.pieIcon {
+  width: clamp(14px, 2.4vw, 18px);
+  height: clamp(14px, 2.4vw, 18px);
+  display: block;
 }
-.dotDone {
-  background: #ffe66d;
-  box-shadow: inset 0 0 0 2px #ffe66d, 0 0 6px rgba(255, 230, 109, 0.4);
+.pieIcon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  shape-rendering: crispEdges;
+  image-rendering: pixelated;
 }
-.dotCurrent {
-  background: var(--accent);
-  box-shadow: inset 0 0 0 2px var(--accent), 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
-  animation: dotBlink 1s steps(2, end) infinite;
+.progressCount {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: clamp(8px, 1.3vw, 10px);
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.progressSlash {
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0 2px;
 }
 .stats {
   display: flex;
@@ -131,10 +139,6 @@
 }
 .lupaUsed { opacity: 0.2; }
 .lupaDanger { animation: dangerBlink 0.5s steps(2, end) infinite; }
-@keyframes dotBlink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0.5; }
-}
 @keyframes findPop {
   0% { transform: scale(0.4); }
   50% { transform: scale(1.4); }

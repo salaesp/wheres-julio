@@ -7,7 +7,7 @@ import {
   SPRITE_SIZE,
 } from "./characters/sprites";
 import { getAccent } from "./worlds/accents";
-import { JulioHeadIcon, MagnifierIcon } from "./HudIcons";
+import { JulioHeadIcon, MagnifierIcon, PieProgress } from "./HudIcons";
 
 const HIT_RADIUS = SPRITE_SIZE * 0.4;
 
@@ -289,13 +289,13 @@ export default function GameCanvas() {
           <div className={styles.levelName} key={state.world}>
             {state.worldModule.title.toUpperCase()}
           </div>
-          <div className={styles.worldDots} aria-label={`Mundo ${state.step + 1} de ${state.total}`}>
-            {Array.from({ length: state.total }, (_, i) => {
-              const cls =
-                i < state.step ? styles.dotDone :
-                i === state.step ? styles.dotCurrent : "";
-              return <div key={i} className={`${styles.dot} ${cls}`} />;
-            })}
+          <div className={styles.worldProgress} aria-label={`Mundo ${state.step + 1} de ${state.total}`}>
+            <div className={styles.pieIcon}>
+              <PieProgress done={state.step} total={state.total} accent={accent} />
+            </div>
+            <span className={styles.progressCount}>
+              {state.step + 1}<span className={styles.progressSlash}>/</span>{state.total}
+            </span>
           </div>
         </div>
         <div className={styles.stats}>

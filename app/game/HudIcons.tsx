@@ -15,6 +15,41 @@ function px(x: number, y: number, color: string, key?: number | string) {
   return <rect key={key} x={x} y={y} width={1} height={1} fill={color} />;
 }
 
+// Pixel-rasterized pie chart. Rasterizes a disc into a low-res grid and fills
+// pixels whose polar angle falls within `done/total` of the way around the
+// circle (starting at 12 o'clock, clockwise).
+export function PieProgress({ done, total, accent }: { done: number; total: number; accent: string }) {
+  const size = 12;
+  const c = size / 2;
+  const r = size / 2;
+  const progress = Math.max(0, Math.min(1, done / total));
+  const pixels: [number, number, string][] = [];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = x + 0.5 - c;
+      const dy = y + 0.5 - c;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > r) continue;
+      const onEdge = dist > r - 1;
+      let ang = Math.atan2(dx, -dy);
+      if (ang < 0) ang += Math.PI * 2;
+      const t = ang / (Math.PI * 2);
+      const filled = progress > 0 && t < progress;
+      const color = onEdge
+        ? "#0b0f24"
+        : filled
+        ? accent
+        : "rgba(255, 255, 255, 0.18)";
+      pixels.push([x, y, color]);
+    }
+  }
+  return (
+    <Grid size={size}>
+      {pixels.map(([x, y, c], i) => px(x, y, c, i))}
+    </Grid>
+  );
+}
+
 // Pack of pixel coords for Julio's iconic red-white striped beanie + head.
 // 8x8 grid. Outline is dark, hat is red/white stripes, face is skin tone.
 export function JulioHeadIcon({ found }: { found: boolean }) {
