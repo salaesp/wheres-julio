@@ -1,0 +1,65 @@
+{
+  "skill_name": "sprite-pipeline",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Tengo este PNG de una silueta de personaje (evals/files/silhouette.png) y lo necesito como sprite de pixel art de 32x32 para el overworld de mi juego. Convertilo y dejame el .ts listo para importar, más una preview para chequear que quedó bien. Decime también si pasó la validación.",
+      "expected_output": "Un sprite 32x32 indexado: silhouette.ts (autocontenido con renderSprite), silhouette.json, silhouette.preview.png y silhouette.report.json. El reporte tiene ok=true con todas las aserciones técnicas en verde.",
+      "files": ["evals/files/silhouette.png"],
+      "assertions": [
+        "El .json generado tiene width === 32 y height === 32",
+        "data.length === 1024 (32*32)",
+        "palette[0] es la cadena vacía y transparentIndex === 0",
+        "Todos los índices de data están en el rango [0, palette.length-1]",
+        "palette.length <= 256",
+        "El anillo exterior (primera/última fila y columna) es >=90% transparente (sin halo)",
+        "El report.json existe y tiene ok === true",
+        "El report.json incluye un campo color_distance numérico",
+        "El .ts exporta una interface Sprite y una función renderSprite"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Pasá esta imagen de un personaje hongo (evals/files/mushroom.jpg, tiene fondo blanco) a un sprite de 64x64 para mi RPG. Quiero buena fidelidad de color, así que no recortes mucho la paleta. Dame el archivo .ts y confirmame con el reporte de validación que no quedó halo de fondo.",
+      "expected_output": "Un sprite 64x64 indexado con su .ts/.json/.preview.png/.report.json. La validación da ok=true, sin halo de fondo, y la color_distance es baja.",
+      "files": ["evals/files/mushroom.jpg"],
+      "assertions": [
+        "El .json generado tiene width === 64 y height === 64",
+        "data.length === 4096 (64*64)",
+        "palette[0] es la cadena vacía y transparentIndex === 0",
+        "palette.length <= 256",
+        "El anillo exterior es >=90% transparente (sin halo de fondo)",
+        "El report.json tiene ok === true",
+        "La color_distance reportada es menor a 25",
+        "El sprite conserva varios colores distintos (palette.length > 3), no se aplastó a pocos colores"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Esta estrella tiene fondo transparente (evals/files/star.png). Renderizámela como sprite de pixel art de 32x32 para usarla de ícono coleccionable en el juego, y validá que el .ts esté bien formado.",
+      "expected_output": "Un sprite 32x32 que respeta la transparencia del PNG original, con .ts/.json/.preview.png/.report.json y validación ok=true.",
+      "files": ["evals/files/star.png"],
+      "assertions": [
+        "El .json generado tiene width === 32 y height === 32",
+        "data.length === 1024",
+        "palette[0] es la cadena vacía y transparentIndex === 0",
+        "El anillo exterior es >=90% transparente",
+        "El report.json tiene ok === true",
+        "El .ts es autocontenido (incluye el tipo Sprite y renderSprite)"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Para el personaje hongo (evals/files/mushroom.jpg) necesito las 4 vistas (frente, espalda, izquierda, derecha) como un set de sprites de 48x48 para poder animar el caminado en las 4 direcciones de mi juego top-down. Generá el set completo en un solo .ts y validá que estén las 4 vistas con el mismo tamaño.",
+      "expected_output": "Un .ts con un Record<Direction, Sprite> que contiene front/back/left/right, todas 48x48, con .json/.preview.png/.report.json. La validación confirma las 4 vistas presentes y con dimensiones iguales.",
+      "files": ["evals/files/mushroom.jpg"],
+      "assertions": [
+        "El .json generado contiene las 4 claves: front, back, left, right",
+        "Las 4 vistas tienen width === 48 y height === 48",
+        "El report.json tiene ok === true con la aserción de 4 vistas presentes en verde",
+        "El .ts exporta un Record<Direction, Sprite> (tipo Direction definido)",
+        "Cada vista cumple las aserciones técnicas (rango de índices, transparente, sin halo)"
+      ]
+    }
+  ]
+}
