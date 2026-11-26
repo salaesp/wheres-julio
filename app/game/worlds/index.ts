@@ -1,32 +1,21 @@
-import { worldModule as parkModule } from "./moonWorld";
-import { worldModule as beachModule } from "./beachWorld";
-import { worldModule as farmModule } from "./farmWorld";
-import { worldModule as iceModule } from "./icePoleWorld";
-import { worldModule as jungleModule } from "./jungleWorld";
-import { worldModule as aquaModule } from "./aquaparkWorld";
-import { worldModule as pirateModule } from "./pirateShipWorld";
-import { worldModule as marathonModule } from "./marathonWorld";
-import { worldModule as schoolModule } from "./schoolWorld";
-import { worldModule as giantModule } from "./giantDeskWorld";
-import { worldModule as chessModule } from "./chessboardWorld";
-import { worldModule as computerModule } from "./computerWorld";
+import { worldModule as plaza } from "./plaza";
+import { worldModule as beach } from "./beach";
+import { worldModule as farm } from "./farm";
+import { worldModule as polar } from "./polar";
+import { worldModule as jungle } from "./jungle";
+import { worldModule as aquapark } from "./aquapark";
+import { worldModule as pirate } from "./pirate";
+import { worldModule as marathon } from "./marathon";
+import { worldModule as school } from "./school";
+import { worldModule as giantDesk } from "./giantDesk";
+import { worldModule as chess } from "./chess";
+import { worldModule as computer } from "./computer";
 import type { WorldModule } from "./types";
 
-// Ordered registry. Adding a new world: append the module here and (optionally)
-// add an entry in ./accents.ts. World ids are 1-based positions in this array.
+// Ordered registry. World ids are 1-based positions in this array (see accents.ts).
 export const WORLDS: readonly WorldModule[] = [
-  parkModule,
-  beachModule,
-  farmModule,
-  iceModule,
-  jungleModule,
-  aquaModule,
-  pirateModule,
-  marathonModule,
-  schoolModule,
-  giantModule,
-  chessModule,
-  computerModule,
+  plaza,
+  beach, farm, polar, jungle, aquapark, pirate, marathon, school, giantDesk, chess, computer,
 ];
 
 export const WORLD_COUNT = WORLDS.length;

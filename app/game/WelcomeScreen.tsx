@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import styles from "./WelcomeScreen.module.css";
-import { drawJulioFound } from "./sprites";
+import { drawJulioBig } from "./engine/characters";
 import { WORLDS } from "./worlds";
 import { getAccent } from "./worlds/accents";
 
@@ -168,7 +168,7 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
       const bigPx = Math.max(4, Math.floor(target / 40));
       const cx = w / 2 - bigPx * 3;
       const cy = h * 0.52 + bob;
-      drawJulioFound(ctx, cx, cy, bigPx);
+      drawJulioBig(ctx, w / 2, cy, bigPx);
 
       // ── Pixel title (capped width + height so doesn't blow up on wide screens) ──
       const maxLineW = Math.min(w * 0.85, 520);
