@@ -114,6 +114,8 @@ export function bakeMap(spec: BakeSpec): { map: string[]; legend: Record<string,
           frames: animated ? frames.map((rows) => [{ rows }]) : undefined,
           fps: spec.fps ?? SEA_FPS,
           cover: cover ? { rows: cover } : undefined,
+          // wading in the surf: only the head shows — too hard for Julio
+          noJulio: !!cover,
         });
       }
       row += assign(t);

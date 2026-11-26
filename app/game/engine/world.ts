@@ -108,8 +108,24 @@ export function defineWorld(def: WorldDef): WorldModule {
       if (!p) continue;
       npcs.push({ ...p, variant: randInt(rng, 0, 4000), dir: randInt(rng, 0, 4) as Dir });
     }
-    // Julio: a bit more breathing room so he's never completely covered.
-    const j = tryPlace(15) ?? tryPlace(10) ?? tryPlace(6) ?? { x: W / 2, y: H / 2 };
+    // Julio: a bit more breathing room so he's never completely covered, and
+    // never on terrains flagged noJulio (wading water).
+    const okForJulio = (p: { x: number; y: number } | null) => {
+      if (!p) return null;
+      for (const [dx, dy] of [[-6, 0], [6, 0], [0, -4], [0, -10], [-6, -8], [6, -8]]) {
+        const t = terrainAt(s.grid, Math.floor((p.x + dx) / TILE), Math.floor((p.y + dy) / TILE));
+        if (t?.noJulio) return null;
+      }
+      return p;
+    };
+    const tryJulio = (minDist: number) => {
+      for (let k = 0; k < 40; k++) {
+        const p = okForJulio(tryPlace(minDist));
+        if (p) return p;
+      }
+      return null;
+    };
+    const j = tryJulio(15) ?? tryJulio(10) ?? tryJulio(6) ?? { x: W / 2, y: H / 2 };
     return { julio: { ...j, dir: randInt(rng, 0, 4) as Dir }, npcs };
   }
 

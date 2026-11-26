@@ -30,6 +30,8 @@ export type TerrainDef = {
   group?: string;
   /** Overlay drawn in front of characters standing on this tile (tall grass). */
   cover?: TileArt;
+  /** Never place Julio on this terrain (e.g. wading water: too hard to spot). */
+  noJulio?: boolean;
 };
 
 export type Terrain = TerrainDef & {
