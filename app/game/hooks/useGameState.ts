@@ -25,8 +25,10 @@ export type GameState = {
 
 const INITIAL_SEED = 0xC0FFEE;
 const TOTAL_WORLDS = WORLD_COUNT;
-const ANIM_MS = 1500;
-const FAIL_ANIM_MS = 1500;
+// Found: ~2s of celebration, then NPCs walk to new spots. Keep in sync with
+// GameCanvas (FOUND_WALK_START / FAIL_WALK_START).
+export const ANIM_MS = 3600;
+export const FAIL_ANIM_MS = 2600;
 const MAX_WRONG = 5;
 const FINDS_TO_COMPLETE = 3;
 

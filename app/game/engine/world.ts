@@ -126,7 +126,8 @@ export function defineWorld(def: WorldDef): WorldModule {
       return null;
     };
     const j = tryJulio(15) ?? tryJulio(10) ?? tryJulio(6) ?? { x: W / 2, y: H / 2 };
-    return { julio: { ...j, dir: randInt(rng, 0, 4) as Dir }, npcs };
+    // Julio always faces the player (front view) — side/back views are too hard.
+    return { julio: { ...j, dir: 0 as Dir }, npcs };
   }
 
   function drawGroundAll(ctx: CanvasRenderingContext2D, s: WorldScene) {
