@@ -9,172 +9,142 @@
   flex-direction: column;
 }
 
+
 /* ─────────────────────────────────────────────
-   HUD — GBA-style top info bar
-   Navy fill, cream text, thick pixel border
+   HUD — a Pokémon-style text panel floating over the world's backdrop:
+   white box, orange frame, dark outer ring (same as the dialog boxes).
 ───────────────────────────────────────────── */
 .hud {
   --accent: #ffe066;
+  --ink: #303030;
+  --ink-shadow: #d0d0d8;
   flex: 0 0 auto;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: clamp(8px, 1.6vw, 16px);
-  padding: clamp(6px, 1.2vw, 10px) clamp(10px, 2vw, 18px);
-  /* GBA UI panel: flat navy, no gradients */
-  background: #181850;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px 10px 6px;
   z-index: 5;
   position: relative;
-  image-rendering: pixelated;
-  /* Minimum height so icons breathe */
-  min-height: clamp(52px, 8vh, 72px);
-  box-sizing: border-box;
-  /* GBA double-border bottom edge:
-     4px outer navy line sits on itself (the bg),
-     then a 4px accent stripe, then 2px lilac inner highlight */
-  border-bottom: 4px solid var(--accent);
-  box-shadow:
-    0 4px 0 0 #181850,
-    0 8px 0 0 #9898f0;
 }
 
-/* ── Home button — pixel-art square ── */
+.panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px 7px 12px;
+  background: #f8f8f8;
+  border: 3px solid #e8a040;
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px #f8f8f8, 0 0 0 4px #5a4870, 3px 4px 0 4px rgba(16, 12, 40, 0.35);
+}
+
+/* ── Home button: small square panel with the same frame ── */
 .homeBtn {
-  width: clamp(30px, 4.5vw, 40px);
-  height: clamp(30px, 4.5vw, 40px);
   flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  align-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(3px, 0.6vw, 6px);
-  /* Cream fill like a GBA button face */
-  background: #2838a0;
-  border: 0;
-  border-radius: 0;
+  padding: 8px;
+  background: #f8f8f8;
+  border: 3px solid #e8a040;
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px #f8f8f8, 0 0 0 4px #5a4870, 3px 4px 0 4px rgba(16, 12, 40, 0.35);
   cursor: pointer;
-  /* Pixel-art raised border: bright top-left, dark bottom-right */
-  box-shadow:
-    inset 2px 2px 0 0 #9898f0,
-    inset -2px -2px 0 0 #0c0c38,
-    0 0 0 2px #181850;
-  transition: transform 0.06s;
-  image-rendering: pixelated;
 }
-.homeBtn:hover {
-  background: #3848b8;
-}
-.homeBtn:active {
-  transform: translate(1px, 1px);
-  box-shadow:
-    inset 2px 2px 0 0 #0c0c38,
-    inset -2px -2px 0 0 #9898f0,
-    0 0 0 2px #181850;
-}
-.homeBtn svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  shape-rendering: crispEdges;
-  image-rendering: pixelated;
-}
+.homeBtn:hover { background: #fff4d8; }
+.homeBtn:active { transform: translate(1px, 2px); box-shadow: 0 0 0 2px #f8f8f8, 0 0 0 4px #5a4870; }
+.homeBtn svg { width: 100%; height: auto; display: block; }
 
-/* ── World title block ── */
+/* ── World name + progress bar ── */
 .titleBlock {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(3px, 0.8vw, 6px);
-  min-width: 0;
-  flex: 1 1 auto;
+  gap: 7px;
 }
-
 .levelName {
   font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: clamp(10px, 2vw, 16px);
-  color: var(--accent);
-  /* Hard 1px shadow only — no glow, no blur */
-  text-shadow: 2px 2px 0 #000;
-  letter-spacing: 0.04em;
+  font-size: clamp(10px, 2.9vw, 14px);
+  color: var(--ink);
+  text-shadow: 2px 2px 0 var(--ink-shadow);
   line-height: 1.35;
-  /* long names wrap to a second line instead of being clipped */
   white-space: normal;
-  max-width: 100%;
   animation: levelIn 0.4s steps(4, end);
   -webkit-font-smoothing: none;
 }
-
 .worldProgress {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 5px;
 }
-.pieIcon {
-  width: clamp(12px, 2vw, 16px);
-  height: clamp(12px, 2vw, 16px);
-  display: block;
+.progressTag {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 7px;
+  color: #f8f8f8;
+  background: #5a4870;
+  padding: 2px 3px 1px;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+  -webkit-font-smoothing: none;
 }
-.pieIcon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  shape-rendering: crispEdges;
-  image-rendering: pixelated;
+/* EXP-style bar: dark frame, pale track, world-accent fill with a highlight */
+.bar {
+  position: relative;
+  flex: 0 1 72px;
+  min-width: 40px;
+  height: 8px;
+  background: #e0dce8;
+  border: 2px solid #5a4870;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.barFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+  transition: width 0.4s steps(6, end);
 }
 .progressCount {
   font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: clamp(7px, 1.1vw, 9px);
-  color: #f0f0d0;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  opacity: 0.75;
+  font-size: 8px;
+  color: var(--ink);
   -webkit-font-smoothing: none;
-}
-.progressSlash {
-  color: #9898f0;
-  margin: 0 2px;
 }
 
-/* ── Stat groups (finds / attempts) ── */
+/* ── Finds (Julio heads) + attempts (hearts) ── */
 .stats {
-  display: flex;
-  gap: clamp(8px, 2vw, 18px);
-  align-items: center;
-  flex-shrink: 0;
-}
-.statGroup {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: clamp(3px, 0.8vw, 5px);
-}
-.statLabel {
-  font-family: "Press Start 2P", "Courier New", monospace;
-  font-size: clamp(6px, 1vw, 8px);
-  color: #9898f0;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  -webkit-font-smoothing: none;
+  align-items: flex-end;
+  gap: 6px;
 }
 .findsRow,
-.lupas {
+.hearts {
   display: flex;
-  gap: clamp(3px, 0.7vw, 5px);
-  align-items: center;
+  gap: 3px;
 }
-.iconSlot {
-  width: clamp(16px, 3vw, 22px);
-  height: clamp(16px, 3vw, 22px);
-  display: block;
-}
-.iconSlot svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  shape-rendering: crispEdges;
-  image-rendering: pixelated;
-}
+.headSlot { width: 24px; height: 24px; display: block; }
+.heartSlot { width: 16px; height: 14px; display: block; }
+.headSlot svg, .heartSlot svg { width: 100%; height: 100%; display: block; }
 .findPop { animation: findPop 0.5s steps(4, end); }
-.lupaUsed { opacity: 0.2; }
-.lupaDanger { animation: dangerBlink 0.5s steps(2, end) infinite; }
+.heartLost { animation: heartLost 0.45s steps(3, end); }
+.heartsDanger .heartSlot { animation: dangerBlink 0.6s steps(2, end) infinite; }
+
+@media (min-width: 640px) {
+  .hud { padding: 10px 16px 8px; gap: 12px; }
+  .homeBtn { width: 56px; height: 56px; }
+  .headSlot { width: 30px; height: 30px; }
+  .heartSlot { width: 20px; height: 18px; }
+  .bar { flex-basis: 120px; }
+}
 
 /* ─────────────────────────────────────────────
    Stage / canvas
@@ -280,6 +250,11 @@
 @keyframes findPop {
   0%   { transform: scale(0.4); }
   50%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+@keyframes heartLost {
+  0% { transform: scale(1.5); }
+  50% { transform: scale(0.7) translateY(-3px); }
   100% { transform: scale(1); }
 }
 @keyframes dangerBlink {

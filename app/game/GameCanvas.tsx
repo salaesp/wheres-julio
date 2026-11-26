@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./GameCanvas.module.css";
 import { useGameState } from "./hooks/useGameState";
 import { getAccent } from "./worlds/accents";
-import { JulioHeadIcon, MagnifierIcon, PieProgress, HomeIcon } from "./HudIcons";
+import { JulioHeadIcon, HeartIcon, HomeIcon } from "./HudIcons";
 import {
   drawCharacter, julioFrames, personFrames, type Dir,
 } from "./engine/characters";
@@ -256,62 +256,57 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
     registerWrong();
   };
 
-  const lupasUsed = state.wrongClicks;
+  const attemptsLeft = 5 - state.wrongClicks;
   const accent = getAccent(state.world);
   const transition = state.phase === "found_anim";
+  const danger = attemptsLeft <= 2 && state.phase === "searching";
+  const progress = (state.step + (state.phase === "world_complete" ? 1 : 0)) / state.total;
 
   return (
-    <div className={styles.root}>
-      <div className={styles.hud} style={{ "--accent": accent } as React.CSSProperties}>
+    <div className={styles.root} style={{ background: world.background }}>
+      <header className={styles.hud} style={{ "--accent": accent } as React.CSSProperties}>
         {onExit && (
           <button className={styles.homeBtn} onClick={onExit} aria-label="Volver al menú principal" title="Volver al menú">
             <HomeIcon />
           </button>
         )}
-        <div className={styles.titleBlock}>
-          <div className={styles.levelName} key={state.world}>
-            {world.title.toUpperCase()}
-          </div>
-          <div className={styles.worldProgress} aria-label={`Mundo ${state.step + 1} de ${state.total}`}>
-            <div className={styles.pieIcon}>
-              <PieProgress done={state.step} total={state.total} accent={accent} />
+        <div className={styles.panel}>
+          <div className={styles.titleBlock}>
+            <div className={styles.levelName} key={state.world}>{world.title}</div>
+            <div className={styles.worldProgress} aria-label={`Mundo ${state.step + 1} de ${state.total}`}>
+              <span className={styles.progressTag}>MUNDO</span>
+              <span className={styles.bar}>
+                <span className={styles.barFill} style={{ width: `${Math.max(4, progress * 100)}%` }} />
+              </span>
+              <span className={styles.progressCount}>{state.step + 1}/{state.total}</span>
             </div>
-            <span className={styles.progressCount}>
-              {state.step + 1}<span className={styles.progressSlash}>/</span>{state.total}
-            </span>
           </div>
-        </div>
-        <div className={styles.stats}>
-          <div className={styles.statGroup}>
-            <div className={styles.statLabel}>Encuentros</div>
-            <div className={styles.findsRow} aria-label={`${state.finds} de 3 encuentros`}>
+          <div className={styles.stats}>
+            <div className={styles.findsRow} aria-label={`Encontraste a Julio ${state.finds} de 3 veces`}>
               {Array.from({ length: 3 }, (_, i) => {
                 const found = i < state.finds;
-                const popping = i === state.finds - 1 && transition;
+                const popping = i === state.finds - 1 && transition && !state.failed;
                 return (
-                  <div key={i} className={`${styles.iconSlot} ${popping ? styles.findPop : ""}`}>
+                  <span key={i} className={`${styles.headSlot} ${popping ? styles.findPop : ""}`}>
                     <JulioHeadIcon found={found} />
-                  </div>
+                  </span>
                 );
               })}
             </div>
-          </div>
-          <div className={styles.statGroup}>
-            <div className={styles.statLabel}>Intentos</div>
-            <div className={styles.lupas} aria-label={`${5 - lupasUsed} intentos restantes`}>
+            <div className={`${styles.hearts} ${danger ? styles.heartsDanger : ""}`} aria-label={`${attemptsLeft} intentos restantes`}>
               {Array.from({ length: 5 }, (_, i) => {
-                const used = i < lupasUsed;
-                const danger = !used && 5 - lupasUsed <= 2 && lupasUsed >= 3;
+                const full = i < attemptsLeft;
+                const lost = i === attemptsLeft && state.wrongClicks > 0;
                 return (
-                  <div key={i} className={`${styles.iconSlot} ${used ? styles.lupaUsed : ""} ${danger ? styles.lupaDanger : ""}`}>
-                    <MagnifierIcon used={used} danger={danger} />
-                  </div>
+                  <span key={`${i}-${state.wrongClicks}`} className={`${styles.heartSlot} ${lost ? styles.heartLost : ""}`}>
+                    <HeartIcon full={full} />
+                  </span>
                 );
               })}
             </div>
           </div>
         </div>
-      </div>
+      </header>
       <div className={styles.stage} ref={stageRef}>
         <canvas ref={canvasRef} className={styles.canvas} onPointerDown={onPointerDown} />
         {transition && (
