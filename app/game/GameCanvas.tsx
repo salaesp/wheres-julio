@@ -223,6 +223,18 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
     return () => cancelAnimationFrame(raf);
   }, [viewport, state.placement, state.phase, state.failed, state.scene, world, W, H]);
 
+  // Dev-only: lets automated screenshots find Julio.
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    const w = window as unknown as { __julio?: () => { x: number; y: number } };
+    w.__julio = () => {
+      const r = stageRef.current!.getBoundingClientRect();
+      const { scale, offX, offY, dpr } = fitRef.current;
+      const j = state.placement.julio;
+      return { x: r.left + (offX + j.x * scale) / dpr, y: r.top + (offY + (j.y - 10) * scale) / dpr };
+    };
+  }, [state.placement]);
+
   const pointerToWorld = (clientX: number, clientY: number) => {
     const rect = stageRef.current!.getBoundingClientRect();
     const { scale, offX, offY, dpr } = fitRef.current;

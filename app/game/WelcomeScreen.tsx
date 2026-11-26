@@ -1,72 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import styles from "./WelcomeScreen.module.css";
-import { drawJulioBig } from "./engine/characters";
+import { drawJulioBig, drawCharacter, julioFrames, personFrames, type Dir } from "./engine/characters";
+import { drawProp, propBase } from "./engine/props";
 import { WORLDS } from "./worlds";
 import { getAccent } from "./worlds/accents";
-
-// Pixel text via offscreen low-res render, then nearest-neighbor upscale.
-function makePixelText(text: string, color: string, smallFontPx: number) {
-  const off = document.createElement("canvas");
-  const octx = off.getContext("2d")!;
-  octx.font = `900 ${smallFontPx}px "Courier New", monospace`;
-  const m = octx.measureText(text);
-  const w = Math.ceil(m.width) + 2;
-  const h = Math.ceil(smallFontPx * 1.25);
-  off.width = w;
-  off.height = h;
-  const ctx2 = off.getContext("2d")!;
-  ctx2.font = `900 ${smallFontPx}px "Courier New", monospace`;
-  ctx2.textBaseline = "top";
-  ctx2.fillStyle = color;
-  ctx2.fillText(text, 1, 1);
-  return off;
-}
-
-// Render text at fixed small font then upscale by integer factor sized to fit
-// `targetHeightPx` tall and at most `maxWidthPx` wide.
-function drawPixelText(
-  ctx: CanvasRenderingContext2D, text: string, cx: number, y: number,
-  color: string, shadow: string, targetHeightPx: number, maxWidthPx: number,
-) {
-  const BASE = 16; // small font size used for rasterization
-  const fg = makePixelText(text, color, BASE);
-  const sh = makePixelText(text, shadow, BASE);
-  const scaleByH = targetHeightPx / fg.height;
-  const scaleByW = maxWidthPx / fg.width;
-  const scale = Math.max(1, Math.floor(Math.min(scaleByH, scaleByW)));
-  const w = fg.width * scale;
-  const h = fg.height * scale;
-  const x = cx - w / 2;
-  ctx.imageSmoothingEnabled = false;
-  // dark blocky shadow offset
-  const s = scale;
-  ctx.drawImage(sh, x + s * 2, y + s * 2, w, h);
-  ctx.drawImage(sh, x - s, y, w, h);
-  ctx.drawImage(sh, x + s, y, w, h);
-  ctx.drawImage(sh, x, y - s, w, h);
-  ctx.drawImage(sh, x, y + s, w, h);
-  ctx.drawImage(fg, x, y, w, h);
-}
-
-function drawCloud(ctx: CanvasRenderingContext2D, x: number, y: number, px: number) {
-  const set = (gx: number, gy: number, c: string) => {
-    ctx.fillStyle = c;
-    ctx.fillRect(x + gx * px, y + gy * px, px, px);
-  };
-  const rect = (gx: number, gy: number, gw: number, gh: number, c: string) => {
-    ctx.fillStyle = c;
-    ctx.fillRect(x + gx * px, y + gy * px, gw * px, gh * px);
-  };
-  const W = "#ffffff";
-  const S = "#cfdcff";
-  // cloud silhouette pixel art (12 wide x 5 tall)
-  rect(2, 0, 4, 1, W);
-  rect(1, 1, 8, 1, W);
-  rect(0, 2, 12, 2, W);
-  rect(1, 4, 10, 1, S);
-  set(3, 1, W); set(4, 1, W);
-}
 
 export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: number) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,98 +22,78 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
+    const ctx = canvas.getContext("2d")!;
+
+    // Background: the plaza map (ground + props + strolling people), panned slowly.
+    const world = WORLDS[0];
+    const scene = world.buildScene();
+    const placement = world.placeCharacters(1234, scene);
+    const ground = document.createElement("canvas");
+    ground.width = world.width;
+    ground.height = world.height;
+    world.drawGround(ground.getContext("2d")!, scene);
+    const native = document.createElement("canvas");
+    native.width = world.width;
+    native.height = world.height;
+    const nctx = native.getContext("2d")!;
+    const julio = julioFrames();
+    const props = world.props(scene);
+    const walkers = placement.npcs.slice(0, 30).map((n, i) => ({
+      ...n, speed: 6 + (i % 5) * 3, axis: i % 2, sign: i % 4 < 2 ? 1 : -1,
+    }));
 
     let raf = 0;
     const start = performance.now();
-
-    const render = () => {
-      const w = wrap.clientWidth;
-      const h = wrap.clientHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const render = (now: number) => {
+      const t = (now - start) / 1000;
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
       if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
         canvas.width = Math.floor(w * dpr);
         canvas.height = Math.floor(h * dpr);
       }
-      const ctx = canvas.getContext("2d")!;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      nctx.drawImage(ground, 0, 0);
+      world.drawAnimated(nctx, scene, t);
+      type D = { y: number; draw: () => void };
+      const list: D[] = props.map((p) => ({ y: propBase(p), draw: () => drawProp(nctx, p, t) }));
+      for (const n of walkers) {
+        // walk back and forth along one axis
+        const range = 28;
+        const ph = ((t * n.speed) / range + n.variant) % 2;
+        const k = ph < 1 ? ph : 2 - ph;
+        const off = (k - 0.5) * range * n.sign;
+        const x = n.axis === 0 ? n.x + off : n.x;
+        const y = n.axis === 1 ? n.y + off : n.y;
+        const forward = (ph < 1) === (n.sign > 0);
+        const dir: Dir = n.axis === 0 ? (forward ? 3 : 2) : (forward ? 0 : 1);
+        const step = (Math.floor(t * 6 + n.variant) % 2 === 0 ? 1 : 2) as 1 | 2;
+        const frames = personFrames(n.variant, world.outfit, world.outfitKey);
+        list.push({ y, draw: () => drawCharacter(nctx, frames, x, y, dir, step) });
+      }
+      list.sort((a, b) => a.y - b.y);
+      for (const d of list) d.draw();
+
+      // cover the screen width; pan vertically over the map
+      const cw = canvas.width, ch = canvas.height;
+      const scale = Math.max(cw / world.width, ch / world.height) * 1.15;
+      const sw = world.width * scale, sh = world.height * scale;
+      const panY = (Math.sin(t * 0.08) * 0.5 + 0.5) * (ch - sh);
+      const offX = Math.floor((cw - sw) / 2);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(native, offX, Math.floor(panY), Math.round(sw), Math.round(sh));
+      ctx.fillStyle = "rgba(24,16,64,0.35)";
+      ctx.fillRect(0, 0, cw, ch);
 
-      // ── Pixel sky: flat single color (GBA spec — no gradients) ──
-      const skyH = h * 0.65;
-      ctx.fillStyle = "#5ab8e8";
-      ctx.fillRect(0, 0, w, skyH);
-      // Sun (pixel circle)
-      const sunPx = Math.min(10, Math.max(4, Math.floor(w / 80)));
-      drawPixelSun(ctx, w - sunPx * 14, sunPx * 8, sunPx);
-      // Clouds — moving slow
-      const t = (performance.now() - start) / 1000;
-      const cloudPx = Math.min(8, Math.max(3, Math.floor(w / 100)));
-      const cloudW = 12 * cloudPx;
-      const drift = (t * 20) % (w + cloudW);
-      drawCloud(ctx, ((w * 0.15 - drift + w + cloudW) % (w + cloudW)) - cloudW, h * 0.08, cloudPx);
-      drawCloud(ctx, ((w * 0.55 - drift + w + cloudW) % (w + cloudW)) - cloudW, h * 0.18, cloudPx);
-      drawCloud(ctx, ((w * 0.85 - drift + w + cloudW) % (w + cloudW)) - cloudW, h * 0.05, cloudPx);
-
-      // ── Ground: GBA-style grass strip ──
-      const groundY = h * 0.65;
-      ctx.fillStyle = "#6dc25a";
-      ctx.fillRect(0, groundY, w, h - groundY);
-      // bright top edge (sun-lit horizon)
-      ctx.fillStyle = "#92dc7a";
-      ctx.fillRect(0, groundY, w, Math.max(3, Math.floor(h / 200)));
-      const sp = Math.max(2, Math.floor(w / 160));
-      // GBA "tuft" clusters (2-pixel dark green clumps)
-      ctx.fillStyle = "#3a7a32";
-      for (let x = 0; x < w; x += sp * 5) {
-        for (let y = groundY + sp * 2; y < h; y += sp * 5) {
-          if (((x * 31 + y * 17) & 5) === 0) {
-            ctx.fillRect(x, y, sp * 2, sp);
-            ctx.fillRect(x + sp, y + sp, sp, sp);
-          }
-        }
-      }
-      // mid-tone speckle
-      ctx.fillStyle = "#58a548";
-      for (let x = sp * 2; x < w; x += sp * 4) {
-        for (let y = groundY + sp * 3; y < h; y += sp * 5) {
-          if (((x * 13 + y * 23) & 7) === 0) ctx.fillRect(x, y, sp, sp);
-        }
-      }
-      // light highlight tufts
-      ctx.fillStyle = "#a8e878";
-      for (let x = sp * 3; x < w; x += sp * 7) {
-        for (let y = groundY + sp * 4; y < h; y += sp * 7) {
-          if (((x * 19 + y * 29) & 7) === 0) ctx.fillRect(x, y, sp, sp);
-        }
-      }
-      // tiny rose-bush flowers
-      const flowerColors = ["#e23a4a", "#f4d24a", "#ffffff"];
-      for (let x = sp; x < w; x += sp * 11) {
-        for (let y = groundY + sp * 5; y < h; y += sp * 9) {
-          if (((x * 41 + y * 19) & 7) === 0) {
-            ctx.fillStyle = flowerColors[((x + y) >>> 0) % flowerColors.length];
-            ctx.fillRect(x, y, sp, sp);
-            ctx.fillRect(x - sp, y + sp, sp, sp);
-            ctx.fillRect(x + sp, y + sp, sp, sp);
-          }
-        }
-      }
-
-      // ── Julio big (bobbing) ──
-      const bob = Math.sin(t * 2) * 6;
-      const target = Math.min(w * 0.7, h * 0.42, 480);
-      const bigPx = Math.max(4, Math.floor(target / 40));
-      const cx = w / 2 - bigPx * 3;
-      const cy = h * 0.52 + bob;
-      drawJulioBig(ctx, w / 2, cy, bigPx);
-
-      // ── Pixel title (capped width + height so doesn't blow up on wide screens) ──
-      const maxLineW = Math.min(w * 0.85, 520);
-      const smallTitleH = Math.min(h * 0.06, 44);
-      drawPixelText(ctx, "DONDE ESTÁ", w / 2, h * 0.06, "#ffffff", "#1a1a1a", smallTitleH, maxLineW);
-      const bigTitleH = Math.min(h * 0.14, 110);
-      drawPixelText(ctx, "JULIO?", w / 2, h * 0.13, "#ffe066", "#1a1a1a", bigTitleH, maxLineW);
+      // Julio, big, hopping in the middle
+      const s = julio[0][Math.floor(t * 3) % 2 === 0 ? 0 : 0];
+      const px = Math.max(3, Math.floor(Math.min(cw * 0.42, ch * 0.3) / s.h));
+      const hop = Math.round(Math.abs(Math.sin(t * 2.5)) * px * 3);
+      const cx = cw / 2, cy = ch * 0.47;
+      ctx.fillStyle = "rgba(16,8,40,0.35)";
+      const shW = Math.round(s.w * px * 0.6 * (1 - hop / (px * 12)));
+      ctx.fillRect(Math.round(cx - shW / 2), Math.round(cy + (s.h * px) / 2 - px * 2), shW, px * 2);
+      drawJulioBig(ctx, cx, cy - hop, px);
 
       raf = requestAnimationFrame(render);
     };
@@ -186,6 +104,10 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
   return (
     <div className={styles.root} ref={wrapRef}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      <h1 className={styles.logo}>
+        <span className={styles.logoSmall}>¿DÓNDE ESTÁ</span>
+        <span className={styles.logoBig}>JULIO?</span>
+      </h1>
       <div className={styles.bottomBar}>
         <button className={styles.startBtn} onClick={() => onStart()}>EMPEZAR</button>
         <p className={styles.hint}>Encuentralo 3 veces en cada mundo</p>
@@ -249,27 +171,4 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
       )}
     </div>
   );
-}
-
-function drawPixelSun(ctx: CanvasRenderingContext2D, cx: number, cy: number, px: number) {
-  const set = (gx: number, gy: number, c: string) => {
-    ctx.fillStyle = c;
-    ctx.fillRect(cx + gx * px, cy + gy * px, px, px);
-  };
-  // sun disc 7x7 ish
-  const Y = "#ffe066";
-  const O = "#ffb84a";
-  const positions: [number, number, string][] = [
-    [-1, -3, Y], [0, -3, Y], [1, -3, Y],
-    [-2, -2, Y], [-1, -2, Y], [0, -2, Y], [1, -2, Y], [2, -2, Y],
-    [-3, -1, Y], [-2, -1, Y], [-1, -1, Y], [0, -1, Y], [1, -1, Y], [2, -1, Y], [3, -1, Y],
-    [-3, 0, Y], [-2, 0, Y], [-1, 0, Y], [0, 0, Y], [1, 0, Y], [2, 0, Y], [3, 0, Y],
-    [-3, 1, O], [-2, 1, O], [-1, 1, O], [0, 1, O], [1, 1, O], [2, 1, O], [3, 1, O],
-    [-2, 2, O], [-1, 2, O], [0, 2, O], [1, 2, O], [2, 2, O],
-    [-1, 3, O], [0, 3, O], [1, 3, O],
-  ];
-  for (const [x, y, c] of positions) set(x, y, c);
-  // rays
-  set(0, -5, Y); set(0, 5, Y); set(-5, 0, Y); set(5, 0, Y);
-  set(-4, -4, O); set(4, -4, O); set(-4, 4, O); set(4, 4, O);
 }

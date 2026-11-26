@@ -50,36 +50,29 @@ export function PieProgress({ done, total, accent }: { done: number; total: numb
   );
 }
 
-// Pack of pixel coords for Julio's iconic red-white striped beanie + head.
-// 8x8 grid. Outline is dark, hat is red/white stripes, face is skin tone.
+// Julio's dino-hood head, 10×10. Bright when found, dim silhouette otherwise.
+const JULIO_HEAD = [
+  "...S..S...",
+  "..OGSGSGO.",
+  ".OWDGGWDGO",
+  "OGGGGGGGGO",
+  "OGWGWGWGWO",
+  "OGKKKKKKGO",
+  "OGKEKKEKGO",
+  "OgGKkkKGgO",
+  ".OggggggO.",
+  "..OOOOOO..",
+];
 export function JulioHeadIcon({ found }: { found: boolean }) {
-  const outline = "#1a1a1a";
-  const skin = found ? "#f9b282" : "#3a3a44";
-  const hatA = found ? "#e23a3a" : "#2a2a34";
-  const hatB = found ? "#ffffff" : "#3a3a44";
-  const eye = found ? "#1a1a1a" : "#2a2a34";
-
-  const pixels: [number, number, string][] = [
-    // hat top pom
-    [3, 0, hatB], [4, 0, hatB],
-    // hat band (striped)
-    [2, 1, hatA], [3, 1, hatB], [4, 1, hatB], [5, 1, hatA],
-    [1, 2, hatA], [2, 2, hatB], [3, 2, hatA], [4, 2, hatA], [5, 2, hatB], [6, 2, hatA],
-    // hat brim
-    [1, 3, outline], [2, 3, outline], [3, 3, outline], [4, 3, outline], [5, 3, outline], [6, 3, outline],
-    // face top
-    [1, 4, skin], [2, 4, skin], [3, 4, skin], [4, 4, skin], [5, 4, skin], [6, 4, skin],
-    // eyes
-    [2, 5, eye], [5, 5, eye],
-    [1, 5, skin], [3, 5, skin], [4, 5, skin], [6, 5, skin],
-    // smile
-    [1, 6, skin], [2, 6, skin], [3, 6, eye], [4, 6, eye], [5, 6, skin], [6, 6, skin],
-    // chin
-    [2, 7, outline], [3, 7, outline], [4, 7, outline], [5, 7, outline],
-  ];
-
+  const pal: Record<string, string> = found
+    ? { S: "#1e6e44", O: "#102818", G: "#3cb46c", g: "#258a54", W: "#ffffff", D: "#202020", K: "#f8d0a8", k: "#e0a878", E: "#282030" }
+    : { S: "#2a2a44", O: "#14142c", G: "#3a3a5c", g: "#30304c", W: "#4a4a6c", D: "#2a2a44", K: "#44446a", k: "#3a3a5c", E: "#2a2a44" };
+  const pixels: [number, number, string][] = [];
+  JULIO_HEAD.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) if (row[x] !== ".") pixels.push([x, y, pal[row[x]]]);
+  });
   return (
-    <Grid size={8}>
+    <Grid size={10}>
       {pixels.map(([x, y, c], i) => px(x, y, c, i))}
     </Grid>
   );

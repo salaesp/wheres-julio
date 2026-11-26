@@ -212,19 +212,15 @@
   animation: fadeIn 0.2s steps(3, end);
 }
 .popupCard {
-  /* GBA dialog box: cream fill */
-  background: #f0f0d0;
+  /* Pokémon-style text box */
+  background: #f8f8f8;
   color: #282828;
-  /* Thick double border: 4px outer navy, then 2px inner lilac */
-  border: 4px solid #181850;
-  outline: 2px solid #9898f0;
-  outline-offset: -6px;
-  border-radius: 0;
+  border: 4px solid #e8a040;
+  border-radius: 10px;
   padding: clamp(20px, 4vw, 32px) clamp(24px, 5vw, 40px);
   text-align: center;
   max-width: min(90vw, 520px);
-  /* Hard 4px drop shadow — no blur */
-  box-shadow: 6px 6px 0 0 #181850;
+  box-shadow: 0 0 0 3px #f8f8f8, 0 0 0 6px #5a4870, 5px 7px 0 6px rgba(16, 12, 40, 0.4);
   animation: popupPop 0.25s steps(4, end);
 }
 .popupCard h2 {
