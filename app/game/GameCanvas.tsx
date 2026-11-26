@@ -14,9 +14,14 @@ import type { NpcPos } from "./worlds/types";
 // Hit area around Julio's body, in native game pixels.
 const HIT_RADIUS = 12;
 const WALK_TIME = 1.15; // seconds NPCs take to reshuffle
+// When the reshuffle starts within the transition (seconds). Before that, the
+// found celebration (big Julio + dialog) or the "escaped" reveal is shown.
+const FOUND_WALK_START = 2.1;
+const FAIL_WALK_START = 1.1;
 
 type WrongMark = { x: number; y: number; t: number };
-type Heart = { x: number; y: number; vx: number; vy: number; t: number };
+// Hearts live in screen (device) pixels around the big celebration Julio.
+type Heart = { x: number; y: number; vx: number; vy: number; t: number; px: number };
 
 function dirFor(dx: number, dy: number, fallback: Dir): Dir {
   if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return fallback;
@@ -62,18 +67,11 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
       return;
     }
     animStartRef.current = performance.now();
-    const j = state.placement.julio;
-    if (!state.failed) {
-      for (let i = 0; i < 10; i++) {
-        heartsRef.current.push({
-          x: j.x + (Math.random() - 0.5) * 10, y: j.y - 20,
-          vx: (Math.random() - 0.5) * 50, vy: -40 - Math.random() * 40, t: -i * 0.04,
-        });
-      }
-    }
+    heartsRef.current = [];
     fromRef.current = state.placement.npcs.map((n) => ({ ...n }));
     toRef.current = state.nextPlacement.npcs.map((n) => ({ ...n }));
-    delayRef.current = state.placement.npcs.map(() => 0.25 + Math.random() * 0.3);
+    const start = state.failed ? FAIL_WALK_START : FOUND_WALK_START;
+    delayRef.current = state.placement.npcs.map(() => start + Math.random() * 0.3);
   }, [state.phase, state.failed, state.placement, state.nextPlacement]);
 
   useEffect(() => {
@@ -161,26 +159,9 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
       // ── Effects ──
       if (animating) {
         const em = state.failed ? EMOTE_Q() : EMOTE();
-        if (animT < 1.4) nctx.drawImage(em.image, Math.round(j.x - em.w / 2 + 3), Math.round(j.y - 36 + hop));
-        if (!state.failed) {
-          const sp = SPARKLE();
-          for (let k = 0; k < 4; k++) {
-            const ang = animT * 4 + (k * Math.PI) / 2;
-            nctx.drawImage(sp.image, Math.round(j.x + Math.cos(ang) * 14 - 2), Math.round(j.y - 10 + Math.sin(ang) * 12 - 2));
-          }
-        }
+        const emoteUntil = state.failed ? FAIL_WALK_START + 0.4 : FOUND_WALK_START;
+        if (animT < emoteUntil) nctx.drawImage(em.image, Math.round(j.x - em.w / 2 + 3), Math.round(j.y - 36 + hop));
       }
-      const heart = HEART();
-      heartsRef.current = heartsRef.current.filter((h) => {
-        h.t += dt;
-        if (h.t < 0) return true;
-        h.x += h.vx * dt;
-        h.y += h.vy * dt;
-        h.vy += 40 * dt;
-        if (h.t > 1.3) return false;
-        if (h.t < 1 || Math.floor(h.t * 20) % 2 === 0) nctx.drawImage(heart.image, Math.round(h.x), Math.round(h.y));
-        return true;
-      });
       const miss = MISS();
       wrongRef.current = wrongRef.current.filter((m) => {
         m.t += dt;
@@ -208,14 +189,60 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
 
       // Dim + big Julio on success
       if (animating && !state.failed) {
-        const k = Math.min(1, animT * 3);
+        // fade in fast, hold, then fade out as the crowd starts moving
+        const k = Math.min(1, animT * 3) * Math.max(0, Math.min(1, 1 - (animT - FOUND_WALK_START + 0.2) / 0.5));
         ctx.fillStyle = `rgba(16,12,40,${0.5 * k})`;
         ctx.fillRect(0, 0, cw, ch);
-        const s = julio[0][0];
-        const big = Math.max(2, Math.floor(Math.min(cw, ch) * 0.45 / s.h * (0.6 + 0.4 * k)));
-        const by = ch * 0.42 + Math.round(Math.abs(Math.sin(animT * 6)) * -big * 2);
-        ctx.drawImage(s.image, Math.round(cw / 2 - (s.w * big) / 2), Math.round(by - (s.h * big) / 2), s.w * big, s.h * big);
+        if (k > 0.05) {
+          // pop in (grow), then shrink away when the celebration ends
+          const grow = Math.min(1, animT * 4);
+          const size = animT < FOUND_WALK_START - 0.2 ? 0.6 + 0.4 * grow : k;
+          const s = julio[0][0];
+          const big = Math.max(1, Math.floor(Math.min(cw, ch) * 0.45 / s.h * size));
+          const by = ch * 0.42 + Math.round(Math.abs(Math.sin(animT * 5)) * -big * 2);
+          const bx = Math.round(cw / 2 - (s.w * big) / 2), byTop = Math.round(by - (s.h * big) / 2);
+          ctx.drawImage(s.image, bx, byTop, s.w * big, s.h * big);
+          // sparkles orbiting the big Julio
+          const sp = SPARKLE();
+          const spPx = Math.max(2, Math.round(big * 0.6));
+          for (let q = 0; q < 5; q++) {
+            const ang = animT * 2.5 + (q * Math.PI * 2) / 5;
+            const sx = cw / 2 + Math.cos(ang) * s.w * big * 0.75;
+            const sy = by + Math.sin(ang) * s.h * big * 0.55;
+            ctx.drawImage(sp.image, Math.round(sx - (sp.w * spPx) / 2), Math.round(sy - (sp.h * spPx) / 2), sp.w * spPx, sp.h * spPx);
+          }
+          // hearts burst out of the big Julio while celebrating
+          if (animT < FOUND_WALK_START - 0.3) {
+            const rate = animT < 0.3 ? 40 : 9; // big burst, then a steady trickle
+            let n = rate * dt;
+            while (n > 0) {
+              if (Math.random() < n) {
+                heartsRef.current.push({
+                  x: cw / 2 + (Math.random() - 0.5) * s.w * big * 0.8,
+                  y: byTop + s.h * big * (0.15 + Math.random() * 0.35),
+                  vx: (Math.random() - 0.5) * big * 40,
+                  vy: -(30 + Math.random() * 35) * big,
+                  t: 0,
+                  px: Math.max(2, Math.round(big * (0.45 + Math.random() * 0.25))),
+                });
+              }
+              n -= 1;
+            }
+          }
+        }
       }
+      const heart = HEART();
+      heartsRef.current = heartsRef.current.filter((h) => {
+        h.t += dt;
+        h.x += h.vx * dt;
+        h.y += h.vy * dt;
+        h.vy += h.px * 25 * dt;
+        if (h.t > 1.4) return false;
+        if (h.t < 1.05 || Math.floor(h.t * 20) % 2 === 0) {
+          ctx.drawImage(heart.image, Math.round(h.x - (heart.w * h.px) / 2), Math.round(h.y), heart.w * h.px, heart.h * h.px);
+        }
+        return true;
+      });
 
       raf = requestAnimationFrame(render);
     };
