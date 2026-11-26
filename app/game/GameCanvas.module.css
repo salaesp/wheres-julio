@@ -94,10 +94,10 @@
   /* Hard 1px shadow only — no glow, no blur */
   text-shadow: 2px 2px 0 #000;
   letter-spacing: 0.04em;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
+  line-height: 1.35;
+  /* long names wrap to a second line instead of being clipped */
+  white-space: normal;
+  max-width: 100%;
   animation: levelIn 0.4s steps(4, end);
   -webkit-font-smoothing: none;
 }

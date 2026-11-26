@@ -45,7 +45,7 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
     let raf = 0;
     const start = performance.now();
     const render = (now: number) => {
-      const t = (now - start) / 1000;
+      const t = Math.max(0, (now - start) / 1000);
       const w = wrap.clientWidth, h = wrap.clientHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 3);
       if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {

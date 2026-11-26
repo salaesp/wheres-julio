@@ -106,7 +106,7 @@ function lipDepth(lip: NonNullable<TerrainDef["lip"]>, i: number, seed: number) 
 export function drawTile(ctx: CanvasRenderingContext2D, g: TerrainGrid, tx: number, ty: number, frame = 0) {
   const t = g.cells[ty * g.cols + tx];
   const sp = spritesFor(t);
-  const fr = sp[frame % sp.length];
+  const fr = sp[((frame % sp.length) + sp.length) % sp.length];
   const px = tx * TILE, py = ty * TILE;
   ctx.drawImage(fr[g.variant[ty * g.cols + tx]].image, px, py);
 

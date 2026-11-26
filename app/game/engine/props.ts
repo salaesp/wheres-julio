@@ -80,6 +80,7 @@ export function propBase(p: PropInstance): number {
 export function drawProp(ctx: CanvasRenderingContext2D, p: PropInstance, time: number) {
   const sp = p.def.sprites();
   if (!sp.length) return;
-  const f = sp.length > 1 ? Math.floor(time * (p.def.fps ?? 3) + p.phase) % sp.length : 0;
+  const n = sp.length;
+  const f = n > 1 ? ((Math.floor(time * (p.def.fps ?? 3) + p.phase) % n) + n) % n : 0;
   ctx.drawImage(sp[f].image, Math.round(p.x), Math.round(p.y));
 }
