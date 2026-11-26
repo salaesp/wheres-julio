@@ -426,7 +426,9 @@ const HAIR: Record<HairStyle, Record<View, string[]>> = {
 };
 
 // ── Hats ─────────────────────────────────────────────────────────────────────
-export type HatStyle = "none" | "cap" | "beanie" | "sunhat" | "bandana";
+export type HatStyle = "none" | "cap" | "beanie" | "sunhat" | "bandana" | "goggles" | "helmet" | "dinohood" | "party";
+// Hats that sit on top of the hair instead of replacing its crown.
+const KEEP_HAIR = new Set<HatStyle>(["goggles", "party"]);
 const HAT: Record<Exclude<HatStyle, "none">, Record<View, string[]>> = {
   cap: {
     front: [
@@ -508,6 +510,117 @@ const HAT: Record<Exclude<HatStyle, "none">, Record<View, string[]>> = {
       ".XXXXXXXXXXXXXX.",
       "..xxxxxxxxxxxx..",
     ],
+  },
+  // Diving mask + snorkel (eyes visible through the glass).
+  goggles: {
+    front: [
+      "................",
+      "................",
+      ".............x..",
+      ".............x..",
+      ".............x..",
+      "..XXXXXXXXXXXXx.",
+      "..XWWWWXXWWWWX..",
+      "..XWWEWXXWEWWX..",
+      "..XWWEWXXWEWWX..",
+      "..XXXXXXXXXXXX..",
+    ],
+    back: [
+      "................",
+      "................",
+      ".............x..",
+      ".............x..",
+      ".............x..",
+      ".............x..",
+      "..xXXXXXXXXXXx..",
+    ],
+    side: [
+      "................",
+      "................",
+      "..........x.....",
+      "..........x.....",
+      "..........x.....",
+      "..........x.....",
+      ".XXXXXXXXXXXXX..",
+      ".XWWEX..........",
+      ".XWWEX..........",
+      ".XXXXX..........",
+    ],
+  },
+  // Explorer pith helmet.
+  helmet: {
+    front: [
+      "................",
+      "......XXXX......",
+      "....XXWWXXXX....",
+      "...XXWXXXXXXX...",
+      "...XXXXXXXXXX...",
+      ".xxxxxxxxxxxxxx.",
+    ],
+    back: [
+      "................",
+      "......XXXX......",
+      "....XXXXXXXX....",
+      "...XXXXXXXXXX...",
+      "...XXXXXXXXXX...",
+      ".xxxxxxxxxxxxxx.",
+    ],
+    side: [
+      "................",
+      "......XXXX......",
+      "....XXWWXXXX....",
+      "...XXWXXXXXXX...",
+      "...XXXXXXXXXX...",
+      "xxxxxxxxxxxxxxx.",
+    ],
+  },
+  // Dino hood in other colors — decoys that look a bit like Julio.
+  dinohood: {
+    front: [
+      "......x..x......",
+      ".....XxXXxX.....",
+      "....XXXXXXXX....",
+      "...XWEXXXXWEX...",
+      "..XXXXXXXXXXXX..",
+      "..XWXWXWXWXWXX..",
+      "..XX........XX..",
+      "..XX........XX..",
+      "..XX........XX..",
+      "..xX........Xx..",
+      "..xx........xx..",
+    ],
+    back: [
+      ".......x........",
+      "......XxX.......",
+      "....XXXxXXXX....",
+      "...XXXXXXXXXX...",
+      "..XXXXXxxXXXXX..",
+      "..XXXXXXXXXXXX..",
+      "..XXXXXxxXXXXX..",
+      "..XXXXXXXXXXXX..",
+      "..XXXXXxxXXXXX..",
+      "...XXXXXXXXXX...",
+      "....xxxxxxxx....",
+    ],
+    side: [
+      ".........x......",
+      "......XXXxX.....",
+      ".....XXXXXXx....",
+      "...XXWEXXXXXX...",
+      "..XXXXXXXXXXXx..",
+      "..WXWXXXXXXXXX..",
+      "......XXXXXXXXx.",
+      ".......XXXXXXX..",
+      ".......XXXXXXX..",
+      "........xXXXXx..",
+      ".........xxxx...",
+    ],
+  },
+  // Party cone hat on top of the hair.
+  party: {
+    front: [".......W........", "......XWX.......", "......XXW.......", ".....XWXXX......"],
+    back: [".......W........", "......XWX.......", "......XXW.......", ".....XWXXX......"],
+    side: [".......W........", "......XWX.......", "......XXW.......", ".....XWXXX......"],
   },
   bandana: {
     front: [
@@ -595,6 +708,14 @@ function weighted<K extends string>(rng: () => number, w: Partial<Record<K, numb
   return entries[entries.length - 1][0];
 }
 
+// Decoy dino hoods are never green (that would be indistinguishable from Julio).
+function hatColorFor(hat: HatStyle, c: string): string {
+  if (hat === "dinohood" && c === "#48b048") return "#f07830";
+  if (hat === "helmet") return "#d8c088";
+  if (hat === "goggles") return c === "#f8f8f8" ? "#3868e0" : c;
+  return c;
+}
+
 export function lookFor(variant: number, outfit: Outfit = {}): Look {
   const rng = createRng(0x51a7 + variant * 7919);
   const pick = <T,>(a: readonly T[]) => a[randInt(rng, 0, a.length)];
@@ -609,7 +730,7 @@ export function lookFor(variant: number, outfit: Outfit = {}): Look {
     hair: pick(HAIRS),
     hairStyle,
     hat,
-    hatColor: pick(HATS),
+    hatColor: hatColorFor(hat, pick(HATS)),
     top: pick(outfit.tops ?? TOPS),
     lower,
     lowerColor: pick(outfit.lowerColors ?? LOWERS),
@@ -648,7 +769,7 @@ function personGrid(l: Look, dir: Dir, step: 0 | 1 | 2): Grid {
   // Under a hat, hide the top hair rows the hat covers (avoids hair poking
   // through the crown) but keep the sides/back.
   let hair = hairRows;
-  if (hatRows) {
+  if (hatRows && !KEEP_HAIR.has(l.hat)) {
     const lastHat = hatRows.length - 1;
     hair = hairRows.map((r, i) => (i < lastHat - 1 ? ".".repeat(16) : r));
   }

@@ -10,12 +10,18 @@ import { worldModule as school } from "./school";
 import { worldModule as giantDesk } from "./giantDesk";
 import { worldModule as chess } from "./chess";
 import { worldModule as computer } from "./computer";
+import { worldModule as candy } from "./candy";
+import { worldModule as museum } from "./museum";
+import { worldModule as undersea } from "./undersea";
+import { worldModule as zoo } from "./zoo";
+import { worldModule as volcano } from "./volcano";
 import type { WorldModule } from "./types";
 
 // Ordered registry. World ids are 1-based positions in this array (see accents.ts).
 export const WORLDS: readonly WorldModule[] = [
   plaza,
   beach, farm, polar, jungle, aquapark, pirate, marathon, school, giantDesk, chess, computer,
+  candy, museum, undersea, zoo, volcano,
 ];
 
 export const WORLD_COUNT = WORLDS.length;

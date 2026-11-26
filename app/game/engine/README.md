@@ -85,6 +85,21 @@ export const worldModule = defineWorld({
 });
 ```
 
+Gorros disponibles para `outfit.hats`: `none`, `cap`, `beanie`, `sunhat`, `bandana`,
+`goggles` (máscara de buceo con snorkel), `helmet` (casco de explorador),
+`dinohood` (capucha de dino de colores: señuelo, nunca verde) y `party` (gorrito cónico).
+Polleras/pantalones: `outfit.lowers` con `pants`, `shorts`, `skirt`.
+
+Otras notas:
+- Colores siempre en hex de 6 dígitos (`#a1b2c3`).
+- `noJulio: true` en un terreno impide que Julio aparezca ahí (p.ej. agua donde
+  sólo se ve la cabeza).
+- Un solo rectángulo `solid` por prop; para formas grandes, partí el prop en varios.
+- Los props `flat` no se animan (salvo sobre tiles animados).
+- Ayudantes reutilizables (sólo lectura): `propsLib/pixkit.ts` (texto 3×5, líneas,
+  elipses, `rod`), `propsLib/artkit.ts`, `terrains/water.ts` (`bakeMap` para costas
+  curvas dibujadas por pixel).
+
 Diseño de nivel: el juego es “¿Dónde está Wally?”. Hace falta **mucha superficie
 caminable** para ~45 personas, con detalles que distraigan (props chicos, flores,
 pasto alto para esconder piernas) pero sin tapar por completo a nadie.
