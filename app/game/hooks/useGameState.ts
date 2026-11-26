@@ -60,8 +60,12 @@ type S = {
   finds: number;
   wrongClicks: number;
   attemptIndex: number;
+  /** Random per world visit so Julio's spots differ every time a world comes up. */
+  salt: number;
   phase: Phase;
 };
+
+const newSalt = () => Math.floor(Math.random() * 0x3fffffff);
 
 type Action =
   | { type: "CLICK_JULIO" }
@@ -108,6 +112,7 @@ function reducer(s: S, a: Action): S {
           finds: 0,
           wrongClicks: 0,
           attemptIndex: 0,
+          salt: newSalt(),
           phase: "searching",
         };
       }
@@ -117,12 +122,13 @@ function reducer(s: S, a: Action): S {
         finds: 0,
         wrongClicks: 0,
         attemptIndex: 0,
+        salt: newSalt(),
         phase: "searching",
       };
     }
 
     case "RESET_WORLD":
-      return { ...s, finds: 0, wrongClicks: 0, attemptIndex: 0, phase: "searching" };
+      return { ...s, finds: 0, wrongClicks: 0, attemptIndex: 0, salt: newSalt(), phase: "searching" };
   }
 }
 
@@ -130,7 +136,7 @@ function initialState(startWorld?: number): S {
   if (startWorld != null && startWorld >= 1 && startWorld <= TOTAL_WORLDS) {
     return {
       sequence: sequenceStartingAt(startWorld),
-      step: 0, finds: 0, wrongClicks: 0, attemptIndex: 0, phase: "searching",
+      step: 0, finds: 0, wrongClicks: 0, attemptIndex: 0, salt: newSalt(), phase: "searching",
     };
   }
   const saved = loadProgress();
@@ -140,7 +146,7 @@ function initialState(startWorld?: number): S {
   const step = typeof saved.currentStep === "number" && saved.currentStep >= 0 && saved.currentStep < TOTAL_WORLDS
     ? saved.currentStep
     : 0;
-  return { sequence, step, finds: 0, wrongClicks: 0, attemptIndex: 0, phase: "searching" };
+  return { sequence, step, finds: 0, wrongClicks: 0, attemptIndex: 0, salt: newSalt(), phase: "searching" };
 }
 
 // ───────── Hook ─────────
@@ -151,8 +157,8 @@ export function useGameState(startWorld?: number) {
   const world = s.sequence[s.step] ?? 1;
   const worldModule = useMemo(() => getWorld(world), [world]);
   const scene = useMemo(() => worldModule.buildScene(), [worldModule]);
-  const seed = useMemo(() => INITIAL_SEED + world * 1000 + s.attemptIndex * 31, [world, s.attemptIndex]);
-  const nextSeed = useMemo(() => INITIAL_SEED + world * 1000 + (s.attemptIndex + 1) * 31, [world, s.attemptIndex]);
+  const seed = useMemo(() => INITIAL_SEED + s.salt + world * 1000 + s.attemptIndex * 31, [world, s.attemptIndex, s.salt]);
+  const nextSeed = useMemo(() => INITIAL_SEED + s.salt + world * 1000 + (s.attemptIndex + 1) * 31, [world, s.attemptIndex, s.salt]);
   const placement = useMemo(() => worldModule.placeCharacters(seed, scene), [worldModule, seed, scene]);
   const nextPlacement = useMemo(() => worldModule.placeCharacters(nextSeed, scene), [worldModule, nextSeed, scene]);
 
