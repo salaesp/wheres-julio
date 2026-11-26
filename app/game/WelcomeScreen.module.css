@@ -29,15 +29,11 @@
   left: clamp(8px, 2vw, 24px);
   right: clamp(8px, 2vw, 24px);
   bottom: clamp(8px, 2vh, 20px);
-  /* GBA dialog box cream fill */
-  background: #f0f0d0;
-  /* Outer navy border + inner lilac inset highlight */
-  border: 4px solid #181850;
-  outline: 2px solid #9898f0;
-  outline-offset: -6px;
-  border-radius: 0;
-  /* Hard 4px drop-shadow, no blur */
-  box-shadow: 4px 4px 0 0 #181850;
+  /* Pokémon-style text box: white fill, orange frame, dark outer ring */
+  background: #f8f8f8;
+  border: 4px solid #e8a040;
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px #f8f8f8, 0 0 0 6px #5a4870, 5px 7px 0 6px rgba(16, 12, 40, 0.4);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -109,8 +105,8 @@
   border-radius: 0;
   cursor: pointer;
   box-shadow:
-    0 0 0 3px #181850,
-    3px 3px 0 3px #0c0c38,
+    0 0 0 2px #5a4870,
+    2px 3px 0 2px rgba(16, 12, 40, 0.3),
     inset 2px 2px 0 0 #9898f0,
     inset -2px -2px 0 0 #0c0c38;
   -webkit-font-smoothing: none;
@@ -160,21 +156,17 @@
 }
 
 .pickerPanel {
-  /* GBA cream menu panel */
-  background: #f0f0d0;
-  color: #282828;
-  /* Thick double border */
-  border: 4px solid #181850;
-  outline: 2px solid #9898f0;
-  outline-offset: -6px;
-  border-radius: 0;
+  /* Pokémon-style menu box */
+  background: #f8f8f8;
+  color: #303030;
+  border: 4px solid #e8a040;
+  border-radius: 10px;
   padding: clamp(12px, 2vw, 20px);
   max-width: min(92vw, 720px);
   width: 100%;
   max-height: 86vh;
   overflow-y: auto;
-  /* Hard drop shadow */
-  box-shadow: 6px 6px 0 0 #181850;
+  box-shadow: 0 0 0 3px #f8f8f8, 0 0 0 6px #5a4870, 5px 7px 0 6px rgba(16, 12, 40, 0.4);
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 16px);
@@ -186,9 +178,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  /* Thin separator — navy line */
   padding-bottom: clamp(8px, 1.2vh, 12px);
-  border-bottom: 3px solid #181850;
+  border-bottom: 3px dashed #d0c8dc;
 }
 
 .pickerTitle {
@@ -246,18 +237,18 @@
   letter-spacing: 0.04em;
   line-height: 1.4;
   /* White text on accent color — like a GBA menu highlight */
-  color: #181850;
+  color: #303030;
   background: var(--chip-accent);
   border: 0;
-  border-radius: 0;
+  border-radius: 6px;
   padding: clamp(8px, 1.4vw, 12px) clamp(6px, 1vw, 10px);
   cursor: pointer;
   text-align: center;
   white-space: normal;
   /* Pixel-art raised border using chip accent */
   box-shadow:
-    0 0 0 3px #181850,
-    3px 3px 0 3px #0c0c38,
+    0 0 0 2px #5a4870,
+    2px 3px 0 2px rgba(16, 12, 40, 0.3),
     inset 2px 2px 0 0 rgba(255, 255, 255, 0.55),
     inset -2px -2px 0 0 rgba(0, 0, 0, 0.25);
   image-rendering: pixelated;
@@ -294,4 +285,49 @@
 @keyframes popPop {
   from { transform: scale(0.9); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
+}
+
+/* ── Title logo: yellow letters, thick blue pixel outline (classic RPG logo) ── */
+.logo {
+  position: absolute;
+  top: clamp(18px, 5vh, 56px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.4vh, 14px);
+  pointer-events: none;
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-weight: 400;
+  -webkit-font-smoothing: none;
+  animation: logoDrop 0.5s steps(6, end);
+}
+.logoSmall,
+.logoBig {
+  --o: 3px;
+  color: #ffd820;
+  text-shadow:
+    var(--o) 0 0 #2848a8, calc(var(--o) * -1) 0 0 #2848a8,
+    0 var(--o) 0 #2848a8, 0 calc(var(--o) * -1) 0 #2848a8,
+    var(--o) var(--o) 0 #2848a8, calc(var(--o) * -1) var(--o) 0 #2848a8,
+    var(--o) calc(var(--o) * -1) 0 #2848a8, calc(var(--o) * -1) calc(var(--o) * -1) 0 #2848a8,
+    calc(var(--o) * 2) calc(var(--o) * 2) 0 #101848,
+    calc(var(--o) * 2.6) calc(var(--o) * 2.6) 0 #101848;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.logoSmall {
+  font-size: clamp(16px, 5.4vw, 30px);
+  color: #ffffff;
+}
+.logoBig {
+  --o: 4px;
+  font-size: clamp(40px, 15vw, 84px);
+}
+@keyframes logoDrop {
+  from { transform: translateY(-40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

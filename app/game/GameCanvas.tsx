@@ -2,357 +2,319 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./GameCanvas.module.css";
 import { useGameState } from "./hooks/useGameState";
-import {
-  drawPerson, drawJulio, drawJulioFound,
-  SPRITE_SIZE,
-} from "./sprites";
 import { getAccent } from "./worlds/accents";
-import { JulioHeadIcon, MagnifierIcon, PieProgress, HomeIcon } from "./HudIcons";
+import { JulioHeadIcon, HeartIcon, HomeIcon } from "./HudIcons";
+import {
+  drawCharacter, julioFrames, personFrames, type Dir,
+} from "./engine/characters";
+import { drawProp, propBase } from "./engine/props";
+import { EMOTE, EMOTE_Q, HEART, MISS, SPARKLE } from "./engine/effects";
+import type { NpcPos } from "./worlds/types";
 
-const HIT_RADIUS = SPRITE_SIZE * 0.4;
+// Hit area around Julio's body, in native game pixels.
+const HIT_RADIUS = 12;
+const WALK_TIME = 1.15; // seconds NPCs take to reshuffle
 
-type WrongMark = { id: number; x: number; y: number; t: number };
-type HeartParticle = { id: number; x: number; y: number; vx: number; vy: number; t: number };
+type WrongMark = { x: number; y: number; t: number };
+type Heart = { x: number; y: number; vx: number; vy: number; t: number };
+
+function dirFor(dx: number, dy: number, fallback: Dir): Dir {
+  if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return fallback;
+  if (Math.abs(dx) > Math.abs(dy)) return dx < 0 ? 2 : 3;
+  return dy < 0 ? 1 : 0;
+}
 
 export default function GameCanvas({ startWorld, onExit }: { startWorld?: number; onExit?: () => void }) {
-  const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [viewport, setViewport] = useState({ w: 1280, h: 720 });
+  const [viewport, setViewport] = useState({ w: 400, h: 700 });
   const { state, registerFind, registerWrong, nextWorld } = useGameState(startWorld);
 
-  const wrongMarksRef = useRef<WrongMark[]>([]);
-  const heartsRef = useRef<HeartParticle[]>([]);
-  const foundStartRef = useRef<number | null>(null);
-  const idRef = useRef(0);
-  const fitRef = useRef({ scale: 1, offX: 0, offY: 0 });
-  const prevNpcsRef = useRef<{ x: number; y: number; variant: number }[]>([]);
-  const nextNpcsRef = useRef<{ x: number; y: number; variant: number }[]>([]);
-  const wanderRef = useRef<{ dx: number; dy: number; phase: number; delay: number }[]>([]);
-  // Offscreen cache for static under-layer. Invalidated when scene changes.
-  const underCacheRef = useRef<HTMLCanvasElement | null>(null);
-  const cachedSceneRef = useRef<unknown>(null);
+  const wrongRef = useRef<WrongMark[]>([]);
+  const heartsRef = useRef<Heart[]>([]);
+  const animStartRef = useRef<number | null>(null);
+  const fitRef = useRef({ scale: 1, offX: 0, offY: 0, dpr: 1 });
+  const fromRef = useRef<NpcPos[]>([]);
+  const toRef = useRef<NpcPos[]>([]);
+  const delayRef = useRef<number[]>([]);
+  const nativeRef = useRef<HTMLCanvasElement | null>(null);
+  const groundRef = useRef<{ scene: unknown; canvas: HTMLCanvasElement } | null>(null);
 
-  const W = state.worldModule.width;
-  const H = state.worldModule.height;
+  const world = state.worldModule;
+  const W = world.width;
+  const H = world.height;
 
   useEffect(() => {
     const onResize = () => {
       const el = stageRef.current;
-      if (!el) return;
-      setViewport({ w: el.clientWidth, h: el.clientHeight });
+      if (el) setViewport({ w: el.clientWidth, h: el.clientHeight });
     };
     onResize();
     const ro = new ResizeObserver(onResize);
     if (stageRef.current) ro.observe(stageRef.current);
-    window.addEventListener("resize", onResize);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", onResize);
-    };
+    return () => ro.disconnect();
   }, []);
 
+  // Start of a transition: hearts + NPC walk targets.
   useEffect(() => {
-    if (state.phase === "found_anim") {
-      foundStartRef.current = performance.now();
-      const j = state.placement.julio;
-      for (let i = 0; i < 14; i++) {
+    if (state.phase !== "found_anim") {
+      animStartRef.current = null;
+      return;
+    }
+    animStartRef.current = performance.now();
+    const j = state.placement.julio;
+    if (!state.failed) {
+      for (let i = 0; i < 10; i++) {
         heartsRef.current.push({
-          id: ++idRef.current,
-          x: j.x + (Math.random() - 0.5) * 20,
-          y: j.y - 10,
-          vx: (Math.random() - 0.5) * 60,
-          vy: -80 - Math.random() * 60,
-          t: 0,
+          x: j.x + (Math.random() - 0.5) * 10, y: j.y - 20,
+          vx: (Math.random() - 0.5) * 50, vy: -40 - Math.random() * 40, t: -i * 0.04,
         });
       }
-      prevNpcsRef.current = state.placement.npcs.map((n) => ({ ...n }));
-      nextNpcsRef.current = state.nextPlacement.npcs.map((n) => ({ ...n }));
-      wanderRef.current = state.placement.npcs.map(() => ({
-        dx: (Math.random() - 0.5) * 30,
-        dy: (Math.random() - 0.5) * 30,
-        phase: Math.random() * Math.PI * 2,
-        delay: Math.random() * 0.25,
-      }));
-    } else {
-      foundStartRef.current = null;
     }
-  }, [state.phase, state.placement.julio, state.placement.npcs, state.nextPlacement.npcs]);
+    fromRef.current = state.placement.npcs.map((n) => ({ ...n }));
+    toRef.current = state.nextPlacement.npcs.map((n) => ({ ...n }));
+    delayRef.current = state.placement.npcs.map(() => 0.25 + Math.random() * 0.3);
+  }, [state.phase, state.failed, state.placement, state.nextPlacement]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     canvas.width = Math.floor(viewport.w * dpr);
     canvas.height = Math.floor(viewport.h * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
+
+    if (!nativeRef.current) nativeRef.current = document.createElement("canvas");
+    const native = nativeRef.current;
+    native.width = W;
+    native.height = H;
+    const nctx = native.getContext("2d")!;
+    nctx.imageSmoothingEnabled = false;
+
+    if (!groundRef.current || groundRef.current.scene !== state.scene) {
+      const g = document.createElement("canvas");
+      g.width = W;
+      g.height = H;
+      const gctx = g.getContext("2d")!;
+      gctx.imageSmoothingEnabled = false;
+      world.drawGround(gctx, state.scene);
+      groundRef.current = { scene: state.scene, canvas: g };
+    }
+    const ground = groundRef.current.canvas;
+    const julio = julioFrames();
+    const props = world.props(state.scene);
 
     let raf = 0;
     let last = performance.now();
 
     const render = (now: number) => {
-      const dt = (now - last) / 1000;
+      const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const time = now / 1000;
+      const animT = animStartRef.current != null ? (now - animStartRef.current) / 1000 : -1;
+      const animating = animT >= 0;
 
-      ctx.clearRect(0, 0, viewport.w, viewport.h);
+      // ── Native-resolution scene ──
+      nctx.drawImage(ground, 0, 0);
+      world.drawAnimated(nctx, state.scene, time);
 
-      const scale = Math.min(viewport.w / W, viewport.h / H);
-      const offX = Math.floor((viewport.w - W * scale) / 2);
-      const offY = Math.floor((viewport.h - H * scale) / 2);
-      fitRef.current = { scale, offX, offY };
-
-      // Background behind map — GBA navy, not raw black.
-      // With width-fill scaling the portrait map covers the full width so
-      // this only shows below the map when the stage is taller than the map.
-      ctx.fillStyle = "#181850";
-      ctx.fillRect(0, 0, viewport.w, viewport.h);
-
-      ctx.save();
-      ctx.translate(offX, offY);
-      ctx.scale(scale, scale);
-
-      // ── World-specific layers ──
-      state.worldModule.renderBackground(ctx, state.scene, time);
-      // Under-layer is static — cache to offscreen, blit each frame.
-      if (cachedSceneRef.current !== state.scene || underCacheRef.current === null
-          || underCacheRef.current.width !== W || underCacheRef.current.height !== H) {
-        const off = document.createElement("canvas");
-        off.width = W;
-        off.height = H;
-        const offCtx = off.getContext("2d");
-        if (offCtx) {
-          offCtx.imageSmoothingEnabled = false;
-          state.worldModule.renderUnder(offCtx, state.scene, time);
+      // NPC positions (walk to their next spot during the transition)
+      type Drawable = { y: number; draw: () => void };
+      const list: Drawable[] = [];
+      const from = fromRef.current, to = toRef.current;
+      const npcs = state.placement.npcs;
+      npcs.forEach((n, i) => {
+        let x = n.x, y = n.y, dir = n.dir, step: 0 | 1 | 2 = 0;
+        if (animating && from[i] && to[i]) {
+          const local = Math.max(0, Math.min(1, (animT - delayRef.current[i]) / WALK_TIME));
+          const a = from[i], b = to[i];
+          x = a.x + (b.x - a.x) * local;
+          y = a.y + (b.y - a.y) * local;
+          if (local > 0 && local < 1) {
+            dir = dirFor(b.x - a.x, b.y - a.y, a.dir);
+            step = (Math.floor(time * 8) % 2 === 0 ? 1 : 2);
+          } else if (local >= 1) dir = b.dir;
         }
-        underCacheRef.current = off;
-        cachedSceneRef.current = state.scene;
-      }
-      ctx.drawImage(underCacheRef.current, 0, 0);
-
-      // ── Characters (interpolate during found_anim, sorted by y) ──
-      const animating = state.phase === "found_anim" && foundStartRef.current != null;
-      const animT = animating
-        ? Math.min(1.5, (now - foundStartRef.current!) / 1000)
-        : 0;
-
-      let npcsRender: { x: number; y: number; variant: number }[];
-      if (animating && prevNpcsRef.current.length === nextNpcsRef.current.length) {
-        const prev = prevNpcsRef.current;
-        const next = nextNpcsRef.current;
-        const wander = wanderRef.current;
-        npcsRender = prev.map((p, i) => {
-          const n = next[i] ?? p;
-          const w = wander[i] ?? { dx: 0, dy: 0, phase: 0, delay: 0 };
-          const local = Math.max(0, Math.min(1, (animT - w.delay) / 1.1));
-          const ease = local < 0.5 ? 2 * local * local : 1 - Math.pow(-2 * local + 2, 2) / 2;
-          const wobble = Math.sin(local * Math.PI * 4 + w.phase) * (1 - Math.abs(local * 2 - 1)) * 3;
-          const arc = Math.sin(local * Math.PI) * (1 - Math.abs(local * 2 - 1)) * 6;
-          return {
-            x: p.x + (n.x - p.x) * ease + w.dx * Math.sin(local * Math.PI) + wobble,
-            y: p.y + (n.y - p.y) * ease + w.dy * Math.sin(local * Math.PI) - arc,
-            variant: p.variant,
-          };
+        const frames = personFrames(n.variant, world.outfit, world.outfitKey);
+        list.push({
+          y,
+          draw: () => {
+            drawCharacter(nctx, frames, x, y, dir, step);
+            for (const c of world.coverAt(state.scene, x, y)) nctx.drawImage(c.sprite.image, c.sx, c.sy, c.w, c.h, c.x, c.y, c.w, c.h);
+          },
         });
-      } else {
-        npcsRender = state.placement.npcs;
+      });
+      const j = state.placement.julio;
+      const hop = animating && !state.failed ? Math.round(Math.abs(Math.sin(animT * 9)) * -4) : 0;
+      list.push({
+        y: j.y,
+        draw: () => {
+          drawCharacter(nctx, julio, j.x, j.y + hop, animating && !state.failed ? 0 : j.dir, 0);
+          for (const c of world.coverAt(state.scene, j.x, j.y)) nctx.drawImage(c.sprite.image, c.sx, c.sy, c.w, c.h, c.x, c.y, c.w, c.h);
+        },
+      });
+      for (const p of props) list.push({ y: propBase(p), draw: () => drawProp(nctx, p, time) });
+      list.sort((a, b) => a.y - b.y);
+      for (const d of list) d.draw();
+
+      // ── Effects ──
+      if (animating) {
+        const em = state.failed ? EMOTE_Q() : EMOTE();
+        if (animT < 1.4) nctx.drawImage(em.image, Math.round(j.x - em.w / 2 + 3), Math.round(j.y - 36 + hop));
+        if (!state.failed) {
+          const sp = SPARKLE();
+          for (let k = 0; k < 4; k++) {
+            const ang = animT * 4 + (k * Math.PI) / 2;
+            nctx.drawImage(sp.image, Math.round(j.x + Math.cos(ang) * 14 - 2), Math.round(j.y - 10 + Math.sin(ang) * 12 - 2));
+          }
+        }
       }
-
-      const all = [
-        ...npcsRender.map((n) => ({ ...n, isJulio: false })),
-        { x: state.placement.julio.x, y: state.placement.julio.y, variant: -1, isJulio: true },
-      ].sort((a, b) => a.y - b.y);
-
-      if (state.phase === "found_anim" && foundStartRef.current != null) {
-        const t = Math.min(1.5, (now - foundStartRef.current) / 1000);
-        const j = state.placement.julio;
-        const glow = ctx.createRadialGradient(j.x, j.y, 10, j.x, j.y, 90 + t * 20);
-        glow.addColorStop(0, "rgba(255,224,90,0.7)");
-        glow.addColorStop(1, "rgba(255,224,90,0)");
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(j.x, j.y, 110 + t * 20, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      for (const c of all) {
-        if (c.isJulio) drawJulio(ctx, c.x, c.y, time);
-        else drawPerson(ctx, c.x, c.y, c.variant, time);
-      }
-
-
-      // ── World over-layer (canopies, umbrellas) ──
-      state.worldModule.renderOver(ctx, state.scene, time);
-
-      if (state.phase === "found_anim" && foundStartRef.current != null) {
-        heartsRef.current.forEach((h) => {
-          h.t += dt;
-          h.x += h.vx * dt;
-          h.y += h.vy * dt;
-          h.vy += 30 * dt;
-          ctx.globalAlpha = Math.max(0, 1 - h.t / 1.2);
-          ctx.fillStyle = "#ff5aa0";
-          ctx.beginPath();
-          ctx.arc(h.x - 3, h.y, 4, 0, Math.PI * 2);
-          ctx.arc(h.x + 3, h.y, 4, 0, Math.PI * 2);
-          ctx.moveTo(h.x - 6, h.y + 1);
-          ctx.lineTo(h.x + 6, h.y + 1);
-          ctx.lineTo(h.x, h.y + 8);
-          ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-      } else {
-        heartsRef.current = [];
-      }
-
-      wrongMarksRef.current = wrongMarksRef.current.filter((m) => {
+      const heart = HEART();
+      heartsRef.current = heartsRef.current.filter((h) => {
+        h.t += dt;
+        if (h.t < 0) return true;
+        h.x += h.vx * dt;
+        h.y += h.vy * dt;
+        h.vy += 40 * dt;
+        if (h.t > 1.3) return false;
+        if (h.t < 1 || Math.floor(h.t * 20) % 2 === 0) nctx.drawImage(heart.image, Math.round(h.x), Math.round(h.y));
+        return true;
+      });
+      const miss = MISS();
+      wrongRef.current = wrongRef.current.filter((m) => {
         m.t += dt;
-        if (m.t > 0.6) return false;
-        const a = 1 - m.t / 0.6;
-        ctx.globalAlpha = a;
-        ctx.strokeStyle = "#ff3a3a";
-        ctx.lineWidth = 5;
-        const r = 18 + m.t * 12;
-        ctx.beginPath();
-        ctx.moveTo(m.x - r, m.y - r);
-        ctx.lineTo(m.x + r, m.y + r);
-        ctx.moveTo(m.x + r, m.y - r);
-        ctx.lineTo(m.x - r, m.y + r);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
+        if (m.t > 0.7) return false;
+        if (m.t < 0.45 || Math.floor(m.t * 20) % 2 === 0) {
+          nctx.drawImage(miss.image, Math.round(m.x - miss.w / 2), Math.round(m.y - miss.h / 2 - m.t * 6));
+        }
         return true;
       });
 
-      ctx.restore();
+      // ── Upscale to the screen (nearest neighbour) ──
+      const cw = canvas.width, ch = canvas.height;
+      let scale = Math.min(cw / W, ch / H);
+      const intScale = Math.floor(scale);
+      if (intScale >= 2 && intScale / scale > 0.9) scale = intScale;
+      const offX = Math.floor((cw - W * scale) / 2);
+      const offY = Math.floor((ch - H * scale) / 2);
+      fitRef.current = { scale, offX, offY, dpr };
 
-      // Big "found" overlay
-      if (state.phase === "found_anim" && foundStartRef.current != null) {
-        const t = Math.min(1.5, (now - foundStartRef.current) / 1000);
-        ctx.fillStyle = `rgba(0,0,0,${0.55 * Math.min(1, t * 4)})`;
-        ctx.fillRect(0, 0, viewport.w, viewport.h);
-        const popT = Math.min(1, t * 3);
-        const ease = 1 - Math.pow(1 - popT, 3);
-        const targetH = Math.min(viewport.h, viewport.w) * 0.7 * ease;
-        const bigPx = Math.max(4, Math.floor(targetH / 40));
-        const cx = viewport.w / 2 - bigPx * 3;
-        const cy = viewport.h / 2;
-        drawJulioFound(ctx, cx, cy, bigPx);
-        ctx.save();
-        ctx.font = `bold ${Math.floor(bigPx * 4)}px ui-monospace, monospace`;
-        ctx.textAlign = "center";
-        ctx.lineWidth = Math.max(3, bigPx);
-        ctx.strokeStyle = "#000";
-        ctx.fillStyle = "#ffe66d";
-        const ty = cy + bigPx * 24;
-        ctx.strokeText("¡ENCONTRADO!", viewport.w / 2, ty);
-        ctx.fillText("¡ENCONTRADO!", viewport.w / 2, ty);
-        ctx.restore();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = world.background;
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.drawImage(native, offX, offY, Math.round(W * scale), Math.round(H * scale));
+
+      // Dim + big Julio on success
+      if (animating && !state.failed) {
+        const k = Math.min(1, animT * 3);
+        ctx.fillStyle = `rgba(16,12,40,${0.5 * k})`;
+        ctx.fillRect(0, 0, cw, ch);
+        const s = julio[0][0];
+        const big = Math.max(2, Math.floor(Math.min(cw, ch) * 0.45 / s.h * (0.6 + 0.4 * k)));
+        const by = ch * 0.42 + Math.round(Math.abs(Math.sin(animT * 6)) * -big * 2);
+        ctx.drawImage(s.image, Math.round(cw / 2 - (s.w * big) / 2), Math.round(by - (s.h * big) / 2), s.w * big, s.h * big);
       }
 
       raf = requestAnimationFrame(render);
     };
     raf = requestAnimationFrame(render);
     return () => cancelAnimationFrame(raf);
-  }, [viewport, state.placement, state.phase, state.scene, state.worldModule, W, H, state.nextPlacement]);
+  }, [viewport, state.placement, state.phase, state.failed, state.scene, world, W, H]);
+
+  // Dev-only: lets automated screenshots find Julio.
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    const w = window as unknown as { __julio?: () => { x: number; y: number } };
+    w.__julio = () => {
+      const r = stageRef.current!.getBoundingClientRect();
+      const { scale, offX, offY, dpr } = fitRef.current;
+      const j = state.placement.julio;
+      return { x: r.left + (offX + j.x * scale) / dpr, y: r.top + (offY + (j.y - 10) * scale) / dpr };
+    };
+  }, [state.placement]);
 
   const pointerToWorld = (clientX: number, clientY: number) => {
-    const el = stageRef.current!;
-    const rect = el.getBoundingClientRect();
-    const px = clientX - rect.left;
-    const py = clientY - rect.top;
-    const { scale, offX, offY } = fitRef.current;
+    const rect = stageRef.current!.getBoundingClientRect();
+    const { scale, offX, offY, dpr } = fitRef.current;
+    const px = (clientX - rect.left) * dpr;
+    const py = (clientY - rect.top) * dpr;
     return { wx: (px - offX) / scale, wy: (py - offY) / scale };
   };
 
-  const handleClick = (clientX: number, clientY: number) => {
+  const onPointerDown = (e: React.PointerEvent) => {
     if (state.phase !== "searching") return;
-    const { wx, wy } = pointerToWorld(clientX, clientY);
+    const { wx, wy } = pointerToWorld(e.clientX, e.clientY);
     const j = state.placement.julio;
-    const dx = j.x - wx, dy = j.y - wy;
+    const dx = j.x - wx, dy = j.y - 10 - wy;
     if (dx * dx + dy * dy <= HIT_RADIUS * HIT_RADIUS) {
       registerFind();
       return;
     }
-    wrongMarksRef.current.push({ id: ++idRef.current, x: wx, y: wy, t: 0 });
+    wrongRef.current.push({ x: wx, y: wy, t: 0 });
     registerWrong();
   };
 
-  const onPointerDown = (e: React.PointerEvent) => handleClick(e.clientX, e.clientY);
-
-  const lupasUsed = state.wrongClicks;
+  const attemptsLeft = 5 - state.wrongClicks;
   const accent = getAccent(state.world);
-  const dangerStart = 3;
+  const transition = state.phase === "found_anim";
+  const danger = attemptsLeft <= 2 && state.phase === "searching";
+  const progress = (state.step + (state.phase === "world_complete" ? 1 : 0)) / state.total;
 
   return (
-    <div className={styles.root} ref={rootRef}>
-      <div className={styles.hud} style={{ "--accent": accent } as React.CSSProperties}>
+    <div className={styles.root} style={{ background: world.background }}>
+      <header className={styles.hud} style={{ "--accent": accent } as React.CSSProperties}>
         {onExit && (
-          <button
-            className={styles.homeBtn}
-            onClick={onExit}
-            aria-label="Volver al menú principal"
-            title="Volver al menú"
-          >
+          <button className={styles.homeBtn} onClick={onExit} aria-label="Volver al menú principal" title="Volver al menú">
             <HomeIcon />
           </button>
         )}
-        <div className={styles.titleBlock}>
-          <div className={styles.levelName} key={state.world}>
-            {state.worldModule.title.toUpperCase()}
-          </div>
-          <div className={styles.worldProgress} aria-label={`Mundo ${state.step + 1} de ${state.total}`}>
-            <div className={styles.pieIcon}>
-              <PieProgress done={state.step} total={state.total} accent={accent} />
+        <div className={styles.panel}>
+          <div className={styles.titleBlock}>
+            <div className={styles.levelName} key={state.world}>{world.title}</div>
+            <div className={styles.worldProgress} aria-label={`Mundo ${state.step + 1} de ${state.total}`}>
+              <span className={styles.progressTag}>MUNDO</span>
+              <span className={styles.bar}>
+                <span className={styles.barFill} style={{ width: `${Math.max(4, progress * 100)}%` }} />
+              </span>
+              <span className={styles.progressCount}>{state.step + 1}/{state.total}</span>
             </div>
-            <span className={styles.progressCount}>
-              {state.step + 1}<span className={styles.progressSlash}>/</span>{state.total}
-            </span>
           </div>
-        </div>
-        <div className={styles.stats}>
-          <div className={styles.statGroup}>
-            <div className={styles.statLabel}>Encuentros</div>
-            <div className={styles.findsRow} aria-label={`${state.finds} de 3 encuentros`}>
+          <div className={styles.stats}>
+            <div className={styles.findsRow} aria-label={`Encontraste a Julio ${state.finds} de 3 veces`}>
               {Array.from({ length: 3 }, (_, i) => {
                 const found = i < state.finds;
-                const popping = i === state.finds - 1 && state.phase === "found_anim";
+                const popping = i === state.finds - 1 && transition && !state.failed;
                 return (
-                  <div key={i} className={`${styles.iconSlot} ${popping ? styles.findPop : ""}`}>
+                  <span key={i} className={`${styles.headSlot} ${popping ? styles.findPop : ""}`}>
                     <JulioHeadIcon found={found} />
-                  </div>
+                  </span>
                 );
               })}
             </div>
-          </div>
-          <div className={styles.statGroup}>
-            <div className={styles.statLabel}>Intentos</div>
-            <div className={styles.lupas} aria-label={`${5 - lupasUsed} intentos restantes`}>
+            <div className={`${styles.hearts} ${danger ? styles.heartsDanger : ""}`} aria-label={`${attemptsLeft} intentos restantes`}>
               {Array.from({ length: 5 }, (_, i) => {
-                const used = i < lupasUsed;
-                const remaining = 5 - lupasUsed;
-                const danger = !used && remaining <= 2 && lupasUsed >= dangerStart;
+                const full = i < attemptsLeft;
+                const lost = i === attemptsLeft && state.wrongClicks > 0;
                 return (
-                  <div
-                    key={i}
-                    className={`${styles.iconSlot} ${used ? styles.lupaUsed : ""} ${danger ? styles.lupaDanger : ""}`}
-                  >
-                    <MagnifierIcon used={used} danger={danger} />
-                  </div>
+                  <span key={`${i}-${state.wrongClicks}`} className={`${styles.heartSlot} ${lost ? styles.heartLost : ""}`}>
+                    <HeartIcon full={full} />
+                  </span>
                 );
               })}
             </div>
           </div>
         </div>
-      </div>
+      </header>
       <div className={styles.stage} ref={stageRef}>
-        <canvas
-          ref={canvasRef}
-          className={styles.canvas}
-          onPointerDown={onPointerDown}
-        />
+        <canvas ref={canvasRef} className={styles.canvas} onPointerDown={onPointerDown} />
+        {transition && (
+          <div className={styles.dialog} role="status">
+            {state.failed ? "¡Oh, no! Julio se escapó..." : "¡Encontraste a JULIO!"}
+            <span className={styles.dialogArrow} />
+          </div>
+        )}
       </div>
 
       {state.phase === "world_complete" && (
@@ -361,7 +323,7 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
             <h2>¡Mundo completado!</h2>
             <p>Encontraste a Julio 3 veces.</p>
             <button className={styles.btn} onClick={nextWorld}>
-              {state.step + 1 < state.total ? `Siguiente mundo →` : "Empezar de nuevo"}
+              {state.step + 1 < state.total ? `Siguiente mundo ▶` : "Empezar de nuevo"}
             </button>
           </div>
         </div>

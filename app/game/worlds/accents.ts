@@ -13,6 +13,11 @@ export const WORLD_ACCENTS: Record<number, string> = {
   10: "#e0a060", // El Mundo Gigante - madera escritorio
   11: "#e0e0e0", // El Tablero - blanco-negro
   12: "#5cf5ff", // La Computadora - cian tech
+  13: "#ff9ad0", // La Ciudad de Golosinas - rosa chicle
+  14: "#e8c890", // El Museo de Dinosaurios - hueso
+  15: "#48d8e0", // El Fondo del Mar - turquesa
+  16: "#f0c048", // El Zoológico - amarillo safari
+  17: "#ff6a3a", // El Volcán - lava
 };
 
 export const DEFAULT_ACCENT = "#ffe66d";

@@ -19,6 +19,8 @@ export type GameState = {
   placement: Placement;
   nextPlacement: Placement;
   attemptIndex: number;
+  /** True while the transition comes from running out of attempts. */
+  failed: boolean;
 };
 
 const INITIAL_SEED = 0xC0FFEE;
@@ -204,6 +206,7 @@ export function useGameState(startWorld?: number) {
     placement,
     nextPlacement,
     attemptIndex: s.attemptIndex,
+    failed: s.phase === "fail_anim",
   };
   return { state, registerWrong, registerFind, nextWorld, resetWorld };
 }
