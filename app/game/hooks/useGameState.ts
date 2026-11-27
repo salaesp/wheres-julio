@@ -21,6 +21,8 @@ export type GameState = {
   attemptIndex: number;
   /** True while the transition comes from running out of attempts. */
   failed: boolean;
+  /** True during the celebration of the find that completes the world (NPCs don't move). */
+  finalFind: boolean;
 };
 
 const INITIAL_SEED = 0xC0FFEE;
@@ -29,6 +31,8 @@ const TOTAL_WORLDS = WORLD_COUNT;
 // GameCanvas (FOUND_WALK_START / FAIL_WALK_START).
 export const ANIM_MS = 3600;
 export const FAIL_ANIM_MS = 2600;
+// Last find of a world: no reshuffle, just the celebration, then the popup.
+export const FINAL_ANIM_MS = 2400;
 const MAX_WRONG = 5;
 const FINDS_TO_COMPLETE = 3;
 
@@ -165,14 +169,15 @@ export function useGameState(startWorld?: number) {
   // Schedule ANIM_DONE on transition phases. Cleanup on unmount or phase change to prevent stale dispatches.
   useEffect(() => {
     if (s.phase === "found_anim") {
-      const t = setTimeout(() => dispatch({ type: "ANIM_DONE" }), ANIM_MS);
+      const ms = s.finds + 1 >= FINDS_TO_COMPLETE ? FINAL_ANIM_MS : ANIM_MS;
+      const t = setTimeout(() => dispatch({ type: "ANIM_DONE" }), ms);
       return () => clearTimeout(t);
     }
     if (s.phase === "fail_anim") {
       const t = setTimeout(() => dispatch({ type: "ANIM_DONE" }), FAIL_ANIM_MS);
       return () => clearTimeout(t);
     }
-  }, [s.phase]);
+  }, [s.phase, s.finds]);
 
   // Persist progress on world_complete + step/sequence changes.
   useEffect(() => {
@@ -215,6 +220,7 @@ export function useGameState(startWorld?: number) {
     nextPlacement,
     attemptIndex: s.attemptIndex,
     failed: s.phase === "fail_anim",
+    finalFind: s.phase === "found_anim" && s.finds + 1 >= FINDS_TO_COMPLETE,
   };
   return { state, registerWrong, registerFind, nextWorld, resetWorld };
 }

@@ -69,10 +69,11 @@ export default function GameCanvas({ name, startWorld, onExit }: { name: string;
     animStartRef.current = performance.now();
     heartsRef.current = [];
     fromRef.current = state.placement.npcs.map((n) => ({ ...n }));
-    toRef.current = state.nextPlacement.npcs.map((n) => ({ ...n }));
+    // Last find of the world: the crowd stays put (no reshuffle before the popup).
+    toRef.current = (state.finalFind ? state.placement : state.nextPlacement).npcs.map((n) => ({ ...n }));
     const start = state.failed ? FAIL_WALK_START : FOUND_WALK_START;
     delayRef.current = state.placement.npcs.map(() => start + Math.random() * 0.3);
-  }, [state.phase, state.failed, state.placement, state.nextPlacement]);
+  }, [state.phase, state.failed, state.finalFind, state.placement, state.nextPlacement]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
