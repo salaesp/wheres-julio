@@ -17,12 +17,12 @@ import {
   AIRLOCK, WINDOW_EARTH, WINDOW_STARS, PLAQUE_CONTROL, PLAQUE_LAB, PLAQUE_HANGAR, PLAQUE_REST,
   SCREEN_WALL, CONSOLE_DESK, HOLO_TABLE, TUBE_CYAN, TUBE_PURPLE, TUBE_PINK, CRYO_POD, LAB_BENCH,
   BUNK, VENDING, LOCKERS, SIGN_LAUNCH, CRATE_HAZ, TANKS, CABLE_A, CABLE_B, CABLE_C, MOON_LAMP,
-  UFO, ALIEN_BLUE, ALIEN_PINK, ALIEN_PURPLE, ALIEN_ORANGE, ASTRO_WHITE, ASTRO_ORANGE,
+  UFO, FUEL_TANK, CHAIR, ALIEN_BLUE, ALIEN_PINK, ALIEN_PURPLE, ALIEN_ORANGE, ASTRO_WHITE, ASTRO_ORANGE,
   MOON_ROCK, MOON_ROCK_BIG, retint,
 } from "../engine/propsLib/space";
 // reused from other worlds
-import { ROPE_72, METEORITE, SIGN_SPACE, CASE_MINERALS, BENCH } from "../engine/propsLib/museum";
-import { CONE, BARRIER_H } from "../engine/propsLib/town";
+import { ROPE_72, METEORITE, SIGN_SPACE, BENCH } from "../engine/propsLib/museum";
+import { CONE, MANHOLE } from "../engine/propsLib/town";
 import { SEISMOGRAPH, CRATES, BACKPACKS } from "../engine/propsLib/volcano";
 import { BARREL } from "../engine/propsLib/pirate";
 import { DRINKING_FOUNTAIN } from "../engine/propsLib/school";
@@ -38,7 +38,7 @@ const props: PropPlace[] = [
   // ── the void: planets, comet, satellite, asteroids ──
   [PLANET_RINGED, 0.4, 0.45], [PLANET_EARTH, 10.2, 0.3], [PLANET_RED, 6.2, 1.9],
   [COMET, 2.4, 2.1], [SATELLITE, 5.4, 0.15], [MOONLET, 13.4, 2.0], [MOONLET, 8.4, 0.9],
-  [ASTEROID, 3.9, 3.1], [ASTEROID, 7.7, 2.9],
+  [ASTEROID, 3.9, 3.1], [ASTEROID, 7.1, 2.7],
 
   // ── plateau: the moon base ──
   [MOON_BASE, 0.0, 4.75],
@@ -46,11 +46,11 @@ const props: PropPlace[] = [
   // ── launch pad: gantry, rocket, cordon, drums ──
   [GANTRY, 8.45, 3.38],
   [ROCKET_BIG, 10.4, 3.44],
-  [PAD_TEXT, 12.9, 8.55],
+  [PAD_TEXT, 13.0, 8.85],
   [DRUM, 9.6, 8.3], [DRUM, 10.35, 8.6], [CONE, 13.7, 9.0], [CONE, 8.15, 9.2],
-  [ASTRO_WHITE, 13.35, 6.1],
+  [FUEL_TANK, 12.5, 5.3], [ASTRO_WHITE, 13.6, 7.2],
   [ROPE_72, 9.9, 9.3],
-  [CABLE_A, 6.6, 10.35],
+  [CABLE_A, 6.6, 10.35], [CABLE_B, 8.3, 8.2],
 
   // ── crater between base and pad ──
   [MOON_FLAG, 6.1, 4.5],
@@ -59,9 +59,10 @@ const props: PropPlace[] = [
 
   // ── walkway band ──
   [SIGN_LAUNCH, 10.3, 10.85],
-  [SEISMOGRAPH, 0.15, 9.7], [DISH, 6.05, 9.15],
+  [SEISMOGRAPH, 0.15, 9.7], [DISH, 6.0, 9.55],
   [MOON_LAMP, 1.3, 9.6], [MOON_LAMP, 13.9, 10.7],
   [MOON_ROCK, 3.9, 10.2], [MOON_ROCK, 13.0, 12.3],
+  [MANHOLE, 4.6, 11.55], [MANHOLE, 11.8, 11.7],
   [ALIEN_PINK, 12.2, 12.1],
 
   // ── south surface: solar, rover, lander, crashed UFO ──
@@ -81,8 +82,8 @@ const props: PropPlace[] = [
   // ── control room ──
   [CONSOLE_DESK, 0.3, 17.2], [CONSOLE_DESK, 3.0, 17.2],
   [HOLO_TABLE, 1.9, 19.2],
-  [LED_BLUE, 0.2, 20.8], [LED_RED, 5.1, 20.9], [LED_YELLOW, 4.9, 19.4],
-  [ASTRO_ORANGE, 0.5, 19.4], [PACKS, 5.0, 21.1],
+  [LED_BLUE, 0.2, 20.8], [LED_RED, 5.1, 20.9], [LED_YELLOW, 5.0, 19.5],
+  [ASTRO_ORANGE, 0.5, 19.8], [PACKS, 5.0, 21.1], [CHAIR, 1.0, 19.1], [CHAIR, 3.9, 19.1],
 
   // ── corridor ──
   [MOON_LAMP, 6.1, 17.0], [MOON_LAMP, 8.35, 17.0],
@@ -93,20 +94,20 @@ const props: PropPlace[] = [
   // ── laboratory ──
   [TUBE_CYAN, 9.2, 16.95], [TUBE_PURPLE, 10.4, 16.95], [TUBE_PINK, 11.6, 16.95],
   [CRYO_POD, 13.1, 16.9],
-  [LAB_BENCH, 9.6, 19.8], [CASE_MINERALS, 13.0, 19.9],
-  [METEORITE, 12.2, 21.3],
+  [LAB_BENCH, 9.1, 19.8],
+  [METEORITE, 12.4, 19.6],
   [ASTRO_WHITE, 9.3, 21.0],
 
   // ── cargo hangar ──
   [PLAQUE_HANGAR, 1.0, 22.2],
-  [LOCKERS, 0.1, 22.9],
-  [STEEL_CRATES, 3.0, 23.1], [CRATE_HAZ, 3.4, 24.9], [DRUM, 5.0, 23.6], [DRUM, 4.9, 24.7],
-  [TANKS, 1.0, 24.9], [BARRIER_H, 2.0, 22.6],
+  [LOCKERS, 0.1, 22.35],
+  [STEEL_CRATES, 3.0, 23.0], [CRATE_HAZ, 3.2, 24.9], [DRUM, 5.0, 23.5], [DRUM, 4.9, 24.7],
+  [TANKS, 0.4, 24.15],
 
   // ── rest area ──
   [PLAQUE_REST, 12.3, 22.2],
-  [BUNK, 11.0, 22.9], [VENDING, 13.5, 23.1],
-  [BENCH_BLUE, 9.3, 24.9], [ALIEN_BLUE, 10.4, 24.0],
+  [BUNK, 9.2, 22.8], [BUNK, 11.35, 22.8], [VENDING, 13.5, 23.1],
+  [BENCH_BLUE, 12.2, 24.8], [ALIEN_BLUE, 9.9, 24.9],
 ];
 
 export const worldModule = defineWorld({
@@ -142,7 +143,7 @@ export const worldModule = defineWorld({
     "kkkkkkdtdbbbbbb",
     "kkkkkkdtdbbbbbb",
     "kkkkkkdtdbbbbbb",
-    "LLLLdd" + "dtd" + "ddLLLL",
+    "LLLLdd" + "dtd" + "LLLLLL",
     "sssggg" + "dtd" + "zzzzzz",
     "sssggg" + "dtd" + "zzzzzz",
     "sssggg" + "dtd" + "zzzzzz",
@@ -150,7 +151,7 @@ export const worldModule = defineWorld({
   props,
   outfit: {
     // Astronauts: white / orange / silver suits, goggles as visors. Never green.
-    hats: { none: 6, helmet: 1.3, dinohood: 0.5 },
+    hats: { none: 6, helmet: 0.8, dinohood: 0.5 },
     lowers: { pants: 1 },
     tops: [
       "#f8f8f8", "#f08030", "#d0d8e8", "#f8c838", "#e84848", "#58a8f0",

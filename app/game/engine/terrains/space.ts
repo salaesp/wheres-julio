@@ -80,7 +80,7 @@ export const STARFIELD = defineTerrain({
   noJulio: true,
   pal: STAR_PAL,
   shade: ["#1c2060"],
-  variants: STAR_VARIANTS.map((s) => ({ rows: stars(s, 0) })),
+  variants: STAR_VARIANTS.map((s) => ({ rows: stars(s, 0), weight: s === 3 ? 0.25 : 1 })),
   frames: [0, 1, 2, 1].map((f) => STAR_VARIANTS.map((s) => ({ rows: stars(s, f) }))),
   fps: 1.2,
 });

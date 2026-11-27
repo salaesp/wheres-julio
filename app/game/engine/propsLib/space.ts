@@ -1054,3 +1054,45 @@ export const MOON_ROCK_BIG = defineProp({
   pal: ROCK_PAL,
   solid: { x: 0, y: 5, w: 22, h: 11 },
 });
+
+// ── Cryogenic fuel tank on cradles (pad scenery) ─────────────────────────────
+export const FUEL_TANK = defineProp({
+  rows: (() => {
+    const g = blank(40, 26);
+    rect(g, 6, 17, 4, 8, "S"); rect(g, 28, 17, 4, 8, "S"); rect(g, 6, 17, 1, 8, "d");
+    rect(g, 4, 24, 8, 2, "S"); rect(g, 26, 24, 8, 2, "S");
+    const inset = [5, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 5];
+    inset.forEach((ins, i) => {
+      const c = i < 3 ? "a" : i < 7 ? "b" : i < 12 ? "c" : "d";
+      for (let x = 1 + ins; x < 39 - ins; x++) put(g, x, 2 + i, c);
+    });
+    rect(g, 10, 4, 2, 14, "u"); rect(g, 27, 4, 2, 14, "u"); rect(g, 10, 4, 1, 14, "U"); rect(g, 27, 4, 1, 14, "U");
+    text(g, 14, 8, "LOX", "k");
+    rect(g, 17, 0, 6, 3, "S"); rect(g, 19, 0, 2, 1, "y"); rect(g, 15, 1, 2, 2, "S"); rect(g, 23, 1, 2, 2, "S");
+    line(g, 34, 6, 34, 16, "S"); line(g, 36, 6, 36, 16, "S");
+    for (let y = 7; y < 16; y += 3) rect(g, 34, y, 3, 1, "S");
+    return rowsOf(g);
+  })(),
+  pal: { a: "#ffffff", b: "#e2e8f8", c: "#b4bee0", d: "#8692bc", u: "#4c98f0", U: "#98c8ff", S: "#6a749c", k: "#2c3454", y: "#f8d848" },
+  solid: { x: 2, y: 8, w: 38, h: 20 },
+});
+
+// ── Swivel chair for the control room ────────────────────────────────────────
+export const CHAIR = defineProp({
+  rows: [
+    "..aaaaaa..",
+    ".abbbbbbc.",
+    ".abbbbbbc.",
+    ".abbbbbbc.",
+    "..cccccc..",
+    ".aabbbbcc.",
+    ".abbbbbbc.",
+    "..cccccc..",
+    "....ss....",
+    "....ss....",
+    "..ssssss..",
+    ".sk.ss.ks.",
+  ],
+  pal: { a: "#a8c4ff", b: "#5c84e8", c: "#3a5cb8", s: "#8a94b8", k: "#2c3454" },
+  solid: { x: 1, y: 8, w: 10, h: 6 },
+});
