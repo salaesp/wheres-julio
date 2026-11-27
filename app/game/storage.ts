@@ -43,3 +43,26 @@ export function clearProgress() {
   if (!s) return;
   try { s.removeItem(KEY); } catch { /* ignore */ }
 }
+
+// ── Player name: the hidden kid takes the name of whoever is playing ──
+const NAME_KEY = "find-julio:name";
+export const DEFAULT_NAME = "Julio";
+export const NAME_MAX = 12;
+
+/** Trim, collapse spaces and cap length; empty → default name. */
+export function cleanName(raw: string): string {
+  const n = raw.replace(/\s+/g, " ").trim().slice(0, NAME_MAX);
+  return n || DEFAULT_NAME;
+}
+
+export function loadName(): string {
+  const s = safeStorage();
+  if (!s) return DEFAULT_NAME;
+  try { return cleanName(s.getItem(NAME_KEY) ?? ""); } catch { return DEFAULT_NAME; }
+}
+
+export function saveName(name: string) {
+  const s = safeStorage();
+  if (!s) return;
+  try { s.setItem(NAME_KEY, cleanName(name)); } catch { /* ignore */ }
+}

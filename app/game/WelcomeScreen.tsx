@@ -5,11 +5,28 @@ import { drawJulioBig, drawCharacter, julioFrames, personFrames, type Dir } from
 import { drawProp, propBase } from "./engine/props";
 import { WORLDS } from "./worlds";
 import { getAccent } from "./worlds/accents";
+import { DEFAULT_NAME, NAME_MAX, cleanName } from "./storage";
 
-export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: number) => void }) {
+type Props = {
+  name: string;
+  onNameChange: (name: string) => void;
+  onStart: (startWorld?: number) => void;
+};
+
+export default function WelcomeScreen({ name, onNameChange, onStart }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // What's typed in the box (may be empty while editing); the logo shows the
+  // cleaned-up name so it never goes blank.
+  const [draft, setDraft] = useState(name === DEFAULT_NAME ? "" : name);
+  // Sync when the saved name loads, without eating spaces mid-typing.
+  useEffect(() => {
+    setDraft((d) => (cleanName(d) === name ? d : name === DEFAULT_NAME ? "" : name));
+  }, [name]);
+  const shown = cleanName(draft);
+  // Long names shrink so they still fit across the screen.
+  const bigSize = `clamp(28px, ${Math.min(15, 78 / Math.max(5, shown.length + 1))}vw, 84px)`;
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -106,11 +123,26 @@ export default function WelcomeScreen({ onStart }: { onStart: (startWorld?: numb
       <canvas ref={canvasRef} className={styles.canvas} />
       <h1 className={styles.logo}>
         <span className={styles.logoSmall}>¿DÓNDE ESTÁ</span>
-        <span className={styles.logoBig}>JULIO?</span>
+        <span className={styles.logoBig} style={{ fontSize: bigSize }}>{shown.toUpperCase()}?</span>
       </h1>
       <div className={styles.bottomBar}>
+        <label className={styles.nameField}>
+          <span className={styles.nameLabel}>¿QUIÉN JUEGA?</span>
+          <input
+            className={styles.nameInput}
+            type="text"
+            value={draft}
+            placeholder={DEFAULT_NAME}
+            maxLength={NAME_MAX}
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="go"
+            onChange={(e) => { setDraft(e.target.value); onNameChange(cleanName(e.target.value)); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); onStart(); } }}
+          />
+        </label>
         <button className={styles.startBtn} onClick={() => onStart()}>EMPEZAR</button>
-        <p className={styles.hint}>Encuentralo 3 veces en cada mundo</p>
+        <p className={styles.hint}>Encontrá a {shown} 3 veces en cada mundo</p>
         <button
           className={styles.pickerToggle}
           onClick={() => setPickerOpen(true)}

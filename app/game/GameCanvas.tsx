@@ -29,7 +29,7 @@ function dirFor(dx: number, dy: number, fallback: Dir): Dir {
   return dy < 0 ? 1 : 0;
 }
 
-export default function GameCanvas({ startWorld, onExit }: { startWorld?: number; onExit?: () => void }) {
+export default function GameCanvas({ name, startWorld, onExit }: { name: string; startWorld?: number; onExit?: () => void }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [viewport, setViewport] = useState({ w: 400, h: 700 });
@@ -309,7 +309,7 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
             </div>
           </div>
           <div className={styles.stats}>
-            <div className={styles.findsRow} aria-label={`Encontraste a Julio ${state.finds} de 3 veces`}>
+            <div className={styles.findsRow} aria-label={`Encontraste a ${name} ${state.finds} de 3 veces`}>
               {Array.from({ length: 3 }, (_, i) => {
                 const found = i < state.finds;
                 const popping = i === state.finds - 1 && transition && !state.failed;
@@ -338,7 +338,7 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
         <canvas ref={canvasRef} className={styles.canvas} onPointerDown={onPointerDown} />
         {transition && (
           <div className={styles.dialog} role="status">
-            {state.failed ? "¡Oh, no! Julio se escapó..." : "¡Encontraste a JULIO!"}
+            {state.failed ? `¡Oh, no! ${name} se escapó...` : `¡Encontraste a ${name.toUpperCase()}!`}
             <span className={styles.dialogArrow} />
           </div>
         )}
@@ -348,7 +348,7 @@ export default function GameCanvas({ startWorld, onExit }: { startWorld?: number
         <div className={styles.popup}>
           <div className={styles.popupCard}>
             <h2>¡Mundo completado!</h2>
-            <p>Encontraste a Julio 3 veces.</p>
+            <p>Encontraste a {name} 3 veces.</p>
             <button className={styles.btn} onClick={nextWorld}>
               {state.step + 1 < state.total ? `Siguiente mundo ▶` : "Empezar de nuevo"}
             </button>

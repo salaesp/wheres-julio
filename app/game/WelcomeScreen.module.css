@@ -331,3 +331,37 @@
   from { transform: translateY(-40px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+/* ── Name entry: "¿QUIÉN JUEGA?" — GBA naming-screen style box ── */
+.nameField {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.nameLabel {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: clamp(8px, 1.4vw, 11px);
+  letter-spacing: 0.08em;
+  color: #181850;
+  -webkit-font-smoothing: none;
+}
+.nameInput {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  /* 16px keeps iOS from zooming in on focus */
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  width: 14ch;
+  padding: 8px 10px;
+  color: #181850;
+  background: #fff8d8;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: 0 0 0 3px #5a4870, inset 2px 2px 0 0 #d8d0b0;
+  -webkit-font-smoothing: none;
+  text-transform: uppercase;
+}
+.nameInput::placeholder { color: #a8a090; }
+.nameInput:focus { box-shadow: 0 0 0 3px #2838a0, 0 0 0 5px #ffe066, inset 2px 2px 0 0 #d8d0b0; }
