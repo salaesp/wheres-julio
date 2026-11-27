@@ -18,6 +18,9 @@ export const WORLD_ACCENTS: Record<number, string> = {
   15: "#48d8e0", // El Fondo del Mar - turquesa
   16: "#f0c048", // El Zoológico - amarillo safari
   17: "#ff6a3a", // El Volcán - lava
+  18: "#9d8cff", // El Espacio - violeta galaxia
+  19: "#7fe0b0", // El Bosque Encantado - verde luciérnaga
+  20: "#ff5a6e", // El Circo - rojo carpa
 };
 
 export const DEFAULT_ACCENT = "#ffe66d";
